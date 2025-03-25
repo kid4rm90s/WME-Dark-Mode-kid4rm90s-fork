@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      0.22.5
+// @version      0.22.6
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @ontributor	 kid4rm90s
@@ -25,7 +25,7 @@
 (function main() {
   "use strict";
 
-  const updateMessage = 'Fixes for below scripts/enhancements:<br>WME LockSmith<br>Closure Helper<br>and minor fixes.';
+  const updateMessage = 'Fixes for below scripts/enhancements:<br>WME LockSmith<br>Closure Helper<br>and minor fixes with version bump.';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
