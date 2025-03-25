@@ -34,9 +34,9 @@ To install this script, you will need a userscript manager like **Tampermonkey**
     * **Firefox:** Install [Tampermonkey](https://www.tampermonkey.net/) or [Greasemonkey](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/) from the Firefox Add-ons.
 
 2. **Install the WME Dark Mode (kid4rm90s fork) Script:**
-    * Click on the following link to install the script directly: [**(https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js)**]
-    * Your userscript manager should automatically detect and prompt you to install the script.
-    * Click **"Install"** to confirm the installation.
+    * Click on the following link to install the script directly: [**WME Dark Mode (kid4rm90s fork)**](https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js)
+        * Your userscript manager should automatically detect and prompt you to install the script.
+        * Click **"Install"** to confirm the installation.
 
 3. **Verify Installation:**
     * Open the Waze Map Editor (WME) in your browser.
