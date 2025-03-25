@@ -22,13 +22,10 @@
 
 /* TODO */
 /* When you click buttons, they still go white */
-/* Place alt name delete button */
-/* WME Locksmith hover i dont know how to make it work*/
-/* Closure helper hower dont know how to make it work*/
 (function main() {
   "use strict";
 
-  const updateMessage = 'Fixes for below scripts/enhancements:<br>WME LockSmith<br>Closure Helper';
+  const updateMessage = 'Fixes for below scripts/enhancements:<br>WME LockSmith<br>Closure Helper<br>and minor fixes.';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
