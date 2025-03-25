@@ -3,7 +3,7 @@
 [![Script Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)](https://github.com/kid4rm90s/Nepali-WMS-Layers)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Simplify adding Nepali Web Map Service (WMS) layers to your Waze Map Editor (WME) environment.**
+**Effortlessly switch to a sleek dark mode theme in your Waze Map Editor (WME) environment.**
 
 ## Description
 
