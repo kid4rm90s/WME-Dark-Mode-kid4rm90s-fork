@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      0.22.6
+// @version      0.22.7
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @ontributor	 kid4rm90s
@@ -24,13 +24,21 @@
 /* When you click buttons, they still go white */
 (function main() {
   "use strict";
+  let sdkVersion = "";
+  unsafeWindow.SDK_INITIALIZED.then(() => {
+  let sdk = unsafeWindow.getWmeSdk({
+  scriptId: "wme-dark-mode-fork",
+  scriptName: "WME Dark Mode (kid4rm90s fork)",
+  });
+  sdkVersion = sdk.getSDKVersion()
+});
 
-  const updateMessage = 'Fixes for below scripts/enhancements:<br>WME LockSmith<br>Closure Helper<br>and minor fixes with version bump.';
+  const updateMessage = 'Fixes for below scripts/enhancements:<br>Minor bug fixes.';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
   let wmeSDK;
-  
+
 if (window.top === window.self) {
     // We are not in an iframe
 	const darkCSSBase =  `
@@ -573,7 +581,7 @@ if (window.top === window.self) {
     background-color: var(--background_default);
    }
 
-   /* Road Selector Plugin */
+/******* Road Selector Plugin ******************************************/
    .table-striped>tbody>tr:nth-of-type(odd) {
    background-color: var(--always_dark_surface_default);
    }
@@ -586,6 +594,12 @@ if (window.top === window.self) {
    #RSoperations > button, #RSselection > button, #btnRSSave {
    color: white !important;
    }
+   #inRSSaveName {
+   color: var(--content_p1) !important;
+    }
+   tbody input[type="text"], tbody input[type="number"] {
+   color: var(--content_p1) !important;
+    }
 
    /* UR-MP Tracking Plugin */
    .popup-pannel-trigger-class-FilterUR,
@@ -735,7 +749,7 @@ if (window.top === window.self) {
 	color: white !important;
     }
 	
-    /*E50 Geometry information Script */
+/******E50 Geometry information Script ********************************************/
     .e50 fieldset legend, .e50 li a:hover {
     background-color: var(--always_dark_surface_default) !important;
     }
@@ -747,6 +761,9 @@ if (window.top === window.self) {
     }
     legend {
     color: var(--content_p1) !important;
+     }
+    .controls-container.e50 input {
+    color: var(--content_p2) !important;
     }
 	
 /**********************Address Point Helper*****************************/
@@ -786,7 +803,6 @@ if (window.top === window.self) {
 	#routeTest a.step {
     color: var(--content_p1) !important;
     }
-
 	
 /******************* WME Validator *************************************/
 	c2821834349 > input:disabled + label, .c2821834349 > input:disabled + label {
@@ -855,6 +871,19 @@ if (window.top === window.self) {
 	}
 	#wmech_mteradiosdiv {
 	background-color: var(--always_dark_surface_default) !important;
+    }
+    div[id^="wmech_presetrow"] input[type="text"], #wmech-settings-boxes input, #wmech-settings-boxes #wmech_settingcustomcs {
+    color: var(--content_p2) !important;
+    }
+
+/****** Place Interface Enhancement PIE **************************************/
+    #divPlaceFilter #piePlaceFilter, #divPlaceNamesFontCustomization input {
+    color: var(--content_p1) !important;
+    }
+
+/****** Open Other Maps OOM **************************************/
+    fieldset #txtOOMLanguage, #txtOOMMyMapLink {
+    color: var(--content_p2) !important;
     }
    	`
     const UR_text_area = `
