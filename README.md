@@ -67,7 +67,7 @@ When contributing, please ensure that your changes:
 
 This script is released under the [**MIT License**](LICENSE).  See the `LICENSE` file for more details.
 
-['https://github.com/kid4rm90s/WME-Dark-Mode-kid4rm90s-fork/blob/main/LICENSE`]
+[LICENSE](https://github.com/kid4rm90s/WME-Dark-Mode-kid4rm90s-fork/blob/main/LICENSE)
 
 **Disclaimer:**
 This script is an unofficial, community-developed tool and is not endorsed or supported by Waze or Google. Use it at your own risk. The dark mode theme is designed to enhance the visual experience of the Waze Map Editor but may not be compatible with all features or future updates of WME. The script developers are not responsible for any issues arising from its use. Always ensure you are using the latest version of the script for optimal performance.
@@ -78,4 +78,4 @@ This script is an unofficial, community-developed tool and is not endorsed or su
 
 This script is modified from [WME Dark Mode](https://greasyfork.org/en/scripts/526924-wme-dark-mode) originally written by **poland_fun** and my other script, [WME HN Highlighter](https://greasyfork.org/en/scripts/525203-wme-hn-highlighter) written by myself.
 
-**GitHub Repository:** [https://github.com/kid4rm90s/WME-Dark-Mode-kid4rm90s-fork]
+**GitHub Repository:** [WME Dark Mode (kid4rm90s fork)](https://github.com/kid4rm90s/WME-Dark-Mode-kid4rm90s-fork)
