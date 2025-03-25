@@ -76,6 +76,6 @@ This script is an unofficial, community-developed tool and is not endorsed or su
 
 ## Acknowledgements
 
-This script is modified from [WME Dark Mode](https://greasyfork.org/en/scripts/526924-wme-dark-mode) by **poland_fun**.
+This script is modified from [WME Dark Mode](https://greasyfork.org/en/scripts/526924-wme-dark-mode) orignally written by **poland_fun**.
 
 **GitHub Repository:** [https://github.com/kid4rm90s/WME-Dark-Mode-kid4rm90s-fork]
