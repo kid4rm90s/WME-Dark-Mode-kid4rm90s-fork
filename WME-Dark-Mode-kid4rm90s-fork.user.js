@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      0.22.7
+// @version      0.22.8
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @ontributor	 kid4rm90s
@@ -24,16 +24,7 @@
 /* When you click buttons, they still go white */
 (function main() {
   "use strict";
-  let sdkVersion = "";
-  unsafeWindow.SDK_INITIALIZED.then(() => {
-  let sdk = unsafeWindow.getWmeSdk({
-  scriptId: "wme-dark-mode-fork",
-  scriptName: "WME Dark Mode (kid4rm90s fork)",
-  });
-  sdkVersion = sdk.getSDKVersion()
-});
-
-  const updateMessage = 'Fixes for below scripts/enhancements:<br>Minor bug fixes.';
+  const updateMessage = 'Fixes for below scripts/enhancements:<br>Minor bug fixes.<br>update for opendata script, Closer helper minor fix';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -774,6 +765,34 @@ if (window.top === window.self) {
 	#edit-panel .control-label, .edit-panel .control-label {
 	color: var(--content_p1) !important;
     }
+
+    /* WME OpenData Plugin */
+    #oslDragBar {
+    background-color: var(--background_default) !important;
+    box-shadow: black 5px 5px 10px !important;
+    }
+    #oslWindow {
+    box-shadow: black 5px 5px 10px !important;
+    border: 1px solid black !important
+    }
+    #oslOSLDiv {
+    background-color: var(--always_dark_surface_default) !important;
+    }
+    #oslSelect {
+    background-color: var(--background_default) !important;
+    }
+    #oslSegGeoUIDiv {
+    background-color: var(--background_default) !important;
+    }
+    #oslGazTagsDiv {
+    background-color: var(--always_dark_surface_default) !important;
+    }
+    #oslNCDiv {
+    background-color: var(--background_default) !important;
+    }
+    #oslMLCDiv {
+    background-color: var(--always_dark_surface_default) !important;
+    }	
 	
 /**********************WME Geometries************************************/
 	.geometries-cb-label {
@@ -874,6 +893,9 @@ if (window.top === window.self) {
     }
     div[id^="wmech_presetrow"] input[type="text"], #wmech-settings-boxes input, #wmech-settings-boxes #wmech_settingcustomcs {
     color: var(--content_p2) !important;
+    }
+	#uroAlerts, #content {
+	background-color: var(--background_default) !important;
     }
 
 /****** Place Interface Enhancement PIE **************************************/
