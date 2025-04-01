@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      0.22.8
+// @version      0.22.9
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @ontributor	 kid4rm90s
@@ -24,7 +24,7 @@
 /* When you click buttons, they still go white */
 (function main() {
   "use strict";
-  const updateMessage = 'Fixes for below scripts/enhancements:<br>Minor bug fixes.<br>update for opendata script, Closer helper minor fix';
+  const updateMessage = 'Fixes for below scripts/enhancements:<br>Minor bug fixes.<br>EVCS Icon fix';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -876,7 +876,7 @@ if (window.top === window.self) {
 	}
 
 /**** Closure helper ******************************************************/
-    .wmech_closurebutton.wmech_presetdeletebutton {
+    .wmech_closurebutton.wmech_presetdeletebutton, button#wmechButton1.wmech_closurebutton {
 	background-color: var(--always_dark_surface_default) !important;
 	}
 	.wmech_closurebutton.wmech_presetsavebutton {
@@ -906,6 +906,11 @@ if (window.top === window.self) {
 /****** Open Other Maps OOM **************************************/
     fieldset #txtOOMLanguage, #txtOOMMyMapLink {
     color: var(--content_p2) !important;
+    }
+
+/*********** EVCS Icons *************************************************/  
+    wz-image-chip img {
+    filter: invert(100%);
     }
    	`
     const UR_text_area = `
