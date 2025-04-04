@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      0.23.0
+// @version      0.23.1
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @ontributor	 kid4rm90s
@@ -517,11 +517,11 @@ if (window.top === window.self) {
     /* .ui-widget-content.newversionpanel, .ui-widget-content.ui-dialog-buttonpane, .WMETB_NewVersionPanel.ui-widget-content { */
     .ui-widget-content, .ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {
 		color: var(--content_p1) !important;
-	background: rgba(0, 0, 0, 0.50) !important;
-	} /* overrided */
+	background: rgba(0, 0, 0, 0.50) !important; /* overrided */
+	} 
 	.ui-widget-content a {
-	color: white !important;
-	} /*color overrided*/
+	color: white !important; /*color overrided*/
+	} 
 	.ui-widget-header, #WMETB_NewVersionPanel {
 	color: var(--content_p1) !important;
 	background: var(--background_default) !important;
@@ -586,11 +586,11 @@ if (window.top === window.self) {
    color: white !important;
    }
    #inRSSaveName {
-   color: var(--content_p1) !important;
-    } /* font color overrided */
+   color: var(--content_p1) !important; /* font color overrided */
+    } 
    tbody input[type="text"], tbody input[type="number"] {
-   color: var(--content_p1) !important;
-    } /* font color overrided */
+   color: var(--content_p1) !important; /* font color overrided */
+    } 
 
    /* UR-MP Tracking Plugin */
    .popup-pannel-trigger-class-FilterUR,
@@ -755,8 +755,7 @@ if (window.top === window.self) {
      }
     .controls-container.e50 input {
     color: var(--content_p2) !important;
-    } 
-	//font override
+    }
 	
 /**********************Address Point Helper*****************************/
 	.waze-btn.waze-btn-white {
@@ -902,13 +901,13 @@ if (window.top === window.self) {
 
 /****** Place Interface Enhancement PIE **************************************/
     #divPlaceFilter #piePlaceFilter, #divPlaceNamesFontCustomization input {
-    color: var(--content_p1) !important;
-    } //overrided
+    color: var(--content_p1) !important; /* overrided */
+    } 
 
 /****** Open Other Maps OOM **************************************/
     fieldset #txtOOMLanguage, #txtOOMMyMapLink {
-    color: var(--content_p2) !important;
-    } // Overrided
+    color: var(--content_p2) !important; /* Overrided */
+    } 
 
 /*********** EVCS Icons *************************************************/  
     wz-image-chip img {
