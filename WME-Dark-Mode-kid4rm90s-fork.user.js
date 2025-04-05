@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      0.23.1
+// @version      0.23.2
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @ontributor	 kid4rm90s
@@ -10,6 +10,7 @@
 // @grant        GM.addStyle
 // @grant        GM_xmlhttpRequest
 // @connect      greasyfork.org
+// @grant        unsafewindow
 // @require      https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
 // @require      https://update.greasyfork.org/scripts/509664/WME%20Utils%20-%20Bootstrap.js
 // @license      MIT
@@ -17,14 +18,99 @@
 // @updateURL https://update.greasyfork.org/scripts/529939/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.meta.js
 // ==/UserScript==
 
+/*
+Change log
+
+Version
+0.1 - Initial Release
+0.2 - Fixed some scripts that used custom CSS
+0.3 - Fixed welcome screen, turn/segment closures
+0.4 - Fixed house number backgrounds
+0.5 - First pass at fixing WMEPH look.
+      Fixed URC pop-up overlay.
+0.6 - Made chat dark.
+      Fixed go to link, and delete buttons for google links, entrances
+0.7 - Undid go to link, and delete buttons for google links, entrances - Broke other stuff
+      Preliminary pass on darkening of WME Toolbox, and Editor info
+0.8 - Fixed some practice mode intro text
+      Fixed Turn restriction table. Some buttons are still broken.
+0.9 - Fixed -
+        - Advanced Closures
+        - Road Selector
+        - UR-MP Trakcer
+        - Editing is disabled tooltips
+        - Intro gif
+0.10 - Fixed -
+        - WMPEH Green Lock background behind Lock text
+        - URO+ tabs + comment hover + comment count
+        - Empty Notification text
+        - Made some text in the toolbox property editor easier to read
+0.11 - Fixed -
+        - Invert URO+ comment count bubbles to preserve color variations.
+0.12 - Fixed -
+        - Non-empty notification entries.
+0.13 - Fixed -
+        - Non-empty notification entries. Maybe? Can't test
+        - Date range picker for RTCs.
+        - Script update screen.
+0.14 - Fixed -
+        - DOT Advisories plugin DOT message pop-ups.
+0.15 - Fixed -
+        - Waze Edit Count Monitor plugin.
+0.16 - Fixed -
+        - Script updateed screen.
+        - Toolbox updated screen.
+        - Toolbox prop editor now looks correct, but is not transparent
+        - URC-E append mode peachpuff is now blue and usable.
+       Fixed indentation of all CSS.
+0.17 - Fixed -
+        - FUME zoom bar
+        - FUME turn hover disable not turning red
+        - Previous build pop-up
+0.18 - Fixed -
+        - Added one more css block for wmesct
+        - Added some transperency back to WME Toolbox due to bigger windows
+        - Added a couple of plugin CSS blocks
+        - Fixed city names on the city layer
+0.19 - Fixed -
+        - Closure date range
+        - External provider links
+0.20 - Fixed -
+        - FUME? update box? I think it was FUME, but I forgot to read it.
+0.21 - Fixed -
+        - E50 Plugin
+        - Allow/Disallow All turns
+0.22 - Fixed -
+        - Fixed WMEOpenData Plugin
+0.23 - Fixed -
+        - Fixes for user editor panel envoronment selection
+		- wme geometries
+		- route checker-
+		- validator
+		- relock segmetns
+		- locksmith
+		- WAL
+		- Closure helper
+	 - Now script is able to show changelog and monitor the updateversion.
+0.24 - Fixed
+		- Place delete icon fix
+		- Lanes and road width color fix
+		- Route checker minor fix
+		- closure helper fix
+		- EVCS icon partial fix
+		- WME Wazebar fix
+		
+*/
+
 /* global W */
 /* global WazeWrap */
 
 /* TODO */
 /* When you click buttons, they still go white */
+
 (function main() {
   "use strict";
-  const updateMessage = 'Fixes for below scripts/enhancements:<br>Minor bug fixes.<br>';
+  const updateMessage = 'Minor bug fixes:Place delete icon fix<br>Lanes and road width color fix <br>Route checker minor fix <br>Closure Helper fix <br>EVCS Icon partial fix<br>WME Wazebar fix';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -754,7 +840,7 @@ if (window.top === window.self) {
     color: var(--content_p1) !important;
      }
     .controls-container.e50 input {
-    color: var(--content_p2) !important;
+    color: var(--content_p2) !important;  /*color overrided*/
     }
 	
 /**********************Address Point Helper*****************************/
@@ -876,10 +962,9 @@ if (window.top === window.self) {
 	}
 
 /**** Closure helper ******************************************************/
-    .wmech_closurebutton.wmech_presetdeletebutton {
+    .wmech_closurebutton.wmech_presetdeletebutton, button#wmechButton1.wmech_closurebutton {
 	background-color: var(--always_dark_surface_default) !important;
-	} 
-	/*button#wmechButton1.wmech_closurebutton*/
+	}
 	.wmech_closurebutton.wmech_presetsavebutton {
 	background-color: var(--background_default) !important;
     }
@@ -913,6 +998,56 @@ if (window.top === window.self) {
     wz-image-chip img {
     filter: invert(100%);
     }
+	
+/*********** WME Wazebar ***********************************************/
+	#WazeBarSettings, .flex-column {
+	background-color: var(--background_default) !important;
+	color: var(--content_p2) !important;
+    }
+	#WazeBarAddCustomLink {
+   	background-color: var(--always_dark_surface_default) !important; /*its add button*/
+    }
+	#WazeBarSettings label, .WazeBarText {
+	color: var(--content_p2) !important;
+	}
+	#WazeBarSettings input[type='number'], #WazeBarSettings input[type='text'], #WazeBarSettings textarea, #colorPickerForumFont, #colorPickerWikiFont {
+	background-color: var(--background_default) !important;
+	border: 1px solid var(--always_dark_surface_default) !important;
+	}
+	.styled-select, .state-header {
+    background: var(--always_dark_inactive) !important;
+	}
+	#WazeBarFavorites {
+    background: var(--always_dark_inactive) !important;
+	}
+	.favorite-item, .favorite-item a {
+    background: var(--always_dark_surface_default) !important;
+	color: var(--content_p2) !important;
+    }
+	#WazeBarFavoritesAddContainer input {
+	background-color: var(--background_default) !important;
+	}
+	#WazeBarAddFavorite {
+   	background-color: var(--always_dark_surface_default) !important; /*its add button*/
+	border: 2px solid var(--always_dark_inactive) !important;
+    }
+	#WazeBarAddFavorite:hover {
+	color: var(--content_p1) !important;
+	background-color: var(--background_default) !important;
+	border-color: var(--always_dark_surface_default) !important;	
+	}
+	#WazeBarAddCustomLink:hover {
+	color: var(--content_p1) !important;
+	background-color: var(--always_dark_inactive) !important;
+	border-color: var(--always_dark_surface_default) !important;	
+	}
+	.favorite-item i, .custom-item i {
+	color: var(--content_p1) !important; /*red close icon*/
+	}
+	.custom-item, .custom-item a  {
+    background: var(--always_dark_inactive) !important;
+	color: var(--content_p2) !important;
+	}
    	`
     const UR_text_area = `
     .wz-textarea .wz-textarea-inner-container textarea {
@@ -1064,7 +1199,6 @@ else {
     sandboxBootstrap();
 	wmeSDK = bootstrap({ scriptUpdateMonitor: { downloadUrl } });
 	
-    console.log(`${scriptName} initialized.`); 
-	
+    console.log(`${scriptName} initialized.`); 	
 	
 })();
