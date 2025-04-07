@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      0.23.2
+// @version      0.24
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @ontributor	 kid4rm90s
@@ -254,6 +254,10 @@ if (window.top === window.self) {
     #sidebar .nav-tabs li.active a {
     background: var(--always_dark_surface_default);
     }
+
+	.nav>li>a:hover {
+    background: var(--always_dark_inactive);
+	}
 
     /* Script button text */
     #sidebar .nav-tabs li a {
@@ -827,7 +831,7 @@ if (window.top === window.self) {
     }
 	
 /******E50 Geometry information Script ********************************************/
-    .e50 fieldset legend, .e50 li a:hover {
+    .e50 fieldset legend, .e50 li a:hover, .e50 li a.noaddress:hover {
     background-color: var(--always_dark_surface_default) !important;
     }
     .wme-ui-panel-container, .wme-ui-close-panel, .e50 li a.noaddress, .e50 .wme-ui-body  {
