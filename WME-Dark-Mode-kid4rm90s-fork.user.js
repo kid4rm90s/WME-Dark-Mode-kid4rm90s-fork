@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      0.24
+// @version      0.24.1
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @ontributor	 kid4rm90s
-// @match         *://*.waze.com/*editor*
-// @match         *://*.waze.com/chat*
+// @match        *://*.waze.com/*editor*
+// @match        *://*.waze.com/chat*
+// @match        *://*.waze.com/discuss*
 // @grant        GM.addStyle
 // @grant        GM_xmlhttpRequest
 // @connect      greasyfork.org
-// @grant        unsafewindow
 // @require      https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
 // @require      https://update.greasyfork.org/scripts/509664/WME%20Utils%20-%20Bootstrap.js
 // @license      MIT
@@ -99,7 +99,9 @@ Version
 		- closure helper fix
 		- EVCS icon partial fix
 		- WME Wazebar fix
-		
+0.24.1 - Fixed
+
+		- WME Wazebar fix for waze discuss		
 */
 
 /* global W */
@@ -110,7 +112,7 @@ Version
 
 (function main() {
   "use strict";
-  const updateMessage = 'Minor bug fixes:Place delete icon fix<br>Lanes and road width color fix <br>Route checker minor fix <br>Closure Helper fix <br>EVCS Icon partial fix<br>WME Wazebar fix';
+  const updateMessage = 'Minor bug fixes:WME Wazebar fix for waze discuss';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -1004,7 +1006,7 @@ if (window.top === window.self) {
     }
 	
 /*********** WME Wazebar ***********************************************/
-	#WazeBarSettings, .flex-column {
+	#WazeBarSettings, .flex-column, #Wazebar {
 	background-color: var(--background_default) !important;
 	color: var(--content_p2) !important;
     }
