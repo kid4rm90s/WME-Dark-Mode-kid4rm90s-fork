@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      0.25
+// @version      0.25.1
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @ontributor	 kid4rm90s
@@ -99,13 +99,17 @@ Version
 		- closure helper fix
 		- EVCS icon partial fix
 		- WME Wazebar fix
+		
 0.24.1 - Fixed
-
 		- WME Wazebar fix for waze discusss
+		
 0.25 - Added ability to toggle dark/light mode in both Prod and Beta. Currently under Waze Settings.
        Fixed
 		- UR/MP list being dark
-        - Added a Wazebar target		
+        - Added a Wazebar target
+
+0.25.1 - Minor fix for sdk initialized
+	
 */
 
 /* global W */
@@ -116,7 +120,7 @@ Version
 
 (function main() {
   "use strict";
-  const updateMessage = 'Added dark/light mode toggle under Waze Settings for both beta and prod.<br>Fixed UR/MPs being dark<br>Fixed/Added Wazebar target';
+  const updateMessage = 'Minor fix for sdk initialized';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -1392,14 +1396,15 @@ else {
 }
     function sandboxBootstrap() {
         if (WazeWrap?.Ready) {
+			wmeSDK = bootstrap({ scriptUpdateMonitor: { downloadUrl } });
             WazeWrap.Interface.ShowScriptUpdate(scriptName, scriptVersion, updateMessage);
+			
         } else {
             setTimeout(sandboxBootstrap, 250);
         }
     }
     // Start the "sandboxed" code.
     sandboxBootstrap();
-	wmeSDK = bootstrap({ scriptUpdateMonitor: { downloadUrl } });
 	
     console.log(`${scriptName} initialized.`); 	
 	
