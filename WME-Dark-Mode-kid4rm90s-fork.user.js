@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      0.24.1
+// @version      0.25
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @ontributor	 kid4rm90s
@@ -101,7 +101,11 @@ Version
 		- WME Wazebar fix
 0.24.1 - Fixed
 
-		- WME Wazebar fix for waze discuss		
+		- WME Wazebar fix for waze discusss
+0.25 - Added ability to toggle dark/light mode in both Prod and Beta. Currently under Waze Settings.
+       Fixed
+		- UR/MP list being dark
+        - Added a Wazebar target		
 */
 
 /* global W */
@@ -112,7 +116,7 @@ Version
 
 (function main() {
   "use strict";
-  const updateMessage = 'Minor bug fixes:WME Wazebar fix for waze discuss';
+  const updateMessage = 'Added dark/light mode toggle under Waze Settings for both beta and prod.<br>Fixed UR/MPs being dark<br>Fixed/Added Wazebar target';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -188,6 +192,76 @@ if (window.top === window.self) {
     color-scheme: dark
     }
     `	
+
+    const lightCSSBase =  `
+	/* Light Mode default Pallete */
+	:host, :root {
+    --alarming: #ff5252;
+    --alarming_variant: #e42828;
+    --always_white: #ffffff;
+    --always_black: #000000;
+    --always_dark: #202124;
+    --always_dark_background_default: #202124;
+    --always_dark_background_variant: #000000;
+    --always_dark_content_default: #e8eaed;
+    --always_dark_content_p1: #d5d7db;
+    --always_dark_content_p2: #b7babf;
+    --always_dark_inactive: #55595e;
+    --always_dark_surface_default: #3c4043;
+    --background_default: #ffffff;
+    --background_modal: rgba(32, 33, 36, 0.6);
+    --background_table_overlay: rgba(114, 118, 125, 0.6);
+    --background_variant: #f2f4f7;
+    --brand_carpool: #1ee592;
+    --brand_waze: #33ccff;
+    --cautious: #ffc400;
+    --cautious_variant: #e37400;
+    --content_default: #202124;
+    --content_p1: #3c4043;
+    --content_p2: #55595e;
+    --content_p3: #72767d;
+    --disabled_text: #b7babf;
+    --hairline: #d5d7db;
+    --hairline_strong: #90959c;
+    --handle: #f8f9fa;
+    --hint_text: #72767d;
+    --ink_elevation: #ffffff;
+    --ink_on_primary: #202124;
+    --ink_on_primary_focused: rgba(32, 33, 36, 0.12);
+    --ink_on_primary_hovered: rgba(32, 33, 36, 0.04);
+    --ink_on_primary_pressed: rgba(32, 33, 36, 0.1);
+    --leading_icon: #90959c;
+    --on_primary: #ffffff;
+    --primary: #0099ff;
+    --primary_variant: #0075e3;
+    --promotion_variant: #842feb;
+    --report_chat: #1ee592;
+    --report_closure: #feb87f;
+    --report_crash: #d5d7db;
+    --report_gas: #1bab50;
+    --report_hazard: #ffc400;
+    --report_jam: #ff5252;
+    --report_place: #c088ff;
+    --report_police: #1ab3ff;
+    --safe: #1bab50;
+    --safe_variant: #118742;
+    --separator_default: #e8eaed;
+    --shadow_default: #3c4043;
+    --surface_alt: #e5f6ff;
+    --surface_default: #f2f4f7;
+    --surface_variant: #e8eaed;
+    --surface_variant_blue: #edf8ff;
+    --surface_variant_green: #eff9f3;
+    --surface_variant_yellow: #fffaeb;
+    --surface_variant_orange: #fff5f1;
+    --surface_variant_red: #fff1f1;
+    --surface_variant_purple: #f8f2ff;
+    background-color: var(--background_default);
+    color: var(--content_default);
+    color-scheme: light;
+	}
+    `
+	
     const cssModifications = `
     #waze-logo {
     filter: invert(100%);
@@ -663,6 +737,14 @@ if (window.top === window.self) {
    .sandbox .welcome-container {
     background-color: var(--background_default);
    }
+      
+    /************* UR List ********************************/
+    .list-item-card-title {
+    color: var(--content_p1) !important;
+    }
+    .list-item-card wz-caption {
+    color: var(--content_p2) !important;
+    }
 
 /******* Road Selector Plugin ******************************************/
    .table-striped>tbody>tr:nth-of-type(odd) {
@@ -806,7 +888,7 @@ if (window.top === window.self) {
 	background-color: black !important;
 	}
 	
-	/*WME FUME*/
+	/*********** WME FUME *************************************/
 	.yslider-stops, .olButton, .olControlPanZoomBar, .slider {
 	background-color: var(--background_default) !important;
 	}
@@ -1063,8 +1145,120 @@ if (window.top === window.self) {
     border-color: white !important;
     }
     `
-    GM.addStyle (darkCSSBase);
-    GM.addStyle (cssModifications);
+
+    const getStoredTheme = () => localStorage.getItem('wz-theme')
+    const setStoredTheme = theme => localStorage.setItem('wz-theme', theme)
+
+    const getPreferredTheme = () => {
+        const storedTheme = getStoredTheme()
+        if (storedTheme) {
+            return storedTheme
+        }
+
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    }
+
+    let styleElement;
+
+    let lightButton;
+    let darkButton;
+
+    // Function to inject styles into the page
+    // If called for the first time, it create an element to inject
+    // it into.
+    function injectStyle(style) {
+        if (!styleElement) {
+            // If styleElement does not exist, create a new one
+            styleElement = document.createElement('style');
+            styleElement.type = 'text/css';
+            document.head.appendChild(styleElement);
+        }
+
+        if (style == 'light') {
+            // Update the style element's content with the new styles
+            styleElement.innerHTML = lightCSSBase;
+        } else {
+            // Update the style element's content with the new styles
+            styleElement.innerHTML = darkCSSBase + cssModifications;
+        }
+    }
+
+    // Define the callback function
+    function changeToDark() {
+        lightButton.value = "false";
+        lightButton.color = "secondary";
+        darkButton.value = "true";
+        darkButton.color = "primary";
+        setStoredTheme('dark');
+        injectStyle('dark');
+    }
+    function changeToLight() {
+        lightButton.value = "true";
+        lightButton.color = "primary";
+        darkButton.value = "false";
+        darkButton.color = "secondary";
+        setStoredTheme('light');
+        injectStyle('light');
+    }
+
+    function addThemeToggleButton(style) {
+        const observer = new MutationObserver((mutationsList, observer) => {
+            const settingsDiv = document.querySelector('.settings');
+            if (settingsDiv) {
+                const formDiv = settingsDiv.querySelector('.settings__form');
+                if (formDiv) {
+                    const newDiv = document.createElement('div');
+                    newDiv.classList.add('settings__form-group', 'dark-mode');
+    
+                    const modeSelectionHTML = `
+                    <div class="theme-select">
+                        <wz-label class="themes-select__label" html-for="">
+                            Color Theme
+                        </wz-label>
+                        <wz-button id="button_light_theme" color="primary" size="sm" value="true">
+                            Light
+                        </wz-button>
+                        <wz-button id="button_dark_theme" color="secondary" size="sm" value="false">
+                            Dark
+                        </wz-button>
+                    </div>
+                    `;
+    
+                    newDiv.innerHTML = modeSelectionHTML;
+                    formDiv.appendChild(newDiv);
+    
+                    // Attach event listeners
+                    lightButton = document.getElementById('button_light_theme');
+                    darkButton = document.getElementById('button_dark_theme');
+    
+                    if (getPreferredTheme() == "dark") {
+                        changeToDark();
+                    }
+    
+                    lightButton.addEventListener('click', changeToLight);
+                    darkButton.addEventListener('click', changeToDark);
+    
+                    // Stop observing once the button is added
+                    observer.disconnect();
+                }
+            }
+        });
+    
+        // Observe the document for changes
+        observer.observe(document.body, { childList: true, subtree: true });
+    }
+    
+    // Call the function after WME is initialized
+    document.addEventListener("wme-initialized", () => addThemeToggleButton(), { once: true });
+
+    if(getPreferredTheme() == 'dark') {
+        // We might not have the buttons loaded at this point.
+        // Inject the styles directly. The code that creates the
+        // Buttons will recall the correct change function which
+        // will highlight the correct button.
+        injectStyle('dark');
+    }
+
 
 
     const observer = new MutationObserver((mutationsList, observer) => {
@@ -1072,47 +1266,49 @@ if (window.top === window.self) {
             if (mutation.type === 'childList') {
                 // Check if added nodes contain a custom element
                 mutation.addedNodes.forEach(node => {
-                    // Waze tooltips (editing disabled messages) are dynamically
-                    // added blocks with shadow roots
-                    // We must use JS to modify it as it is being created
-                    if (node.nodeName === 'WZ-TOOLTIP-CONTENT') {
-                        // Modify the style attribute if it contains a specific string
-                        if (node.hasAttribute('style')) {
-                            let style = node.getAttribute('style');
+                    if(getPreferredTheme() == 'dark') {
+                        // Waze tooltips (editing disabled messages) are dynamically
+                        // added blocks with shadow roots
+                        // We must use JS to modify it as it is being created
+                        if (node.nodeName === 'WZ-TOOLTIP-CONTENT') {
+                            // Modify the style attribute if it contains a specific string
+                            if (node.hasAttribute('style')) {
+                                let style = node.getAttribute('style');
 
-                            // Change the background color
-                            if (style.includes('wz-tooltip-content-background-color')) {
-                                style = style.replace(/wz-tooltip-content-background-color:[^;]*;/,
-                                                      'wz-tooltip-content-background-color: #202124;');
-                            }
-                            // Change the box shadow to be a white outline
-                            if (style.includes('wz-tooltip-content-box-shadow')) {
-                                style = style.replace(/wz-tooltip-content-box-shadow:[^;]*;/,
-                                                      'wz-tooltip-content-box-shadow: rgb(213, 215, 219) 0px 0px 0px 1px;');
-                            }
+                                // Change the background color
+                                if (style.includes('wz-tooltip-content-background-color')) {
+                                    style = style.replace(/wz-tooltip-content-background-color:[^;]*;/,
+                                                          'wz-tooltip-content-background-color: #202124;');
+                                }
+                                // Change the box shadow to be a white outline
+                                if (style.includes('wz-tooltip-content-box-shadow')) {
+                                    style = style.replace(/wz-tooltip-content-box-shadow:[^;]*;/,
+                                                          'wz-tooltip-content-box-shadow: rgb(213, 215, 219) 0px 0px 0px 1px;');
+                                }
 
-                            // Update the style attribute with the modified string
-                            node.setAttribute('style', style);
+                                // Update the style attribute with the modified string
+                                node.setAttribute('style', style);
+                            }
+                        }
+
+                        // UR Request text area is in a shadow root that is hard to target
+                        // It is properly set-up to use the correct root color variables.
+                        // Unfortunately, URC-E overrides the background color to
+                        // peachpuff if append mode is on. We can fix it by using CSS to
+                        // make it white and invert it so it looks correct. But we need
+                        // to do it this way because of the shadow root.
+                        if (node.nodeName === 'TEXTAREA') {
+                            // Get the parent of the target node
+                            const shadowRoot = node.parentNode.shadowRoot;
+
+                            if (shadowRoot) {
+                                const style = document.createElement('style');
+                                style.textContent = UR_text_area;
+                                // Append the <style> element to the parent node
+                                shadowRoot.appendChild(style);
+                            }
                         }
                     }
-
-                    // UR Request text area is in a shadow root that is hard to target
-                    // It is properly set-up to use the correct root color variables.
-                    // Unfortunately, URC-E overrides the background color to
-                    // peachpuff if append mode is on. We can fix it by using CSS to
-                    // make it white and invert it so it looks correct. But we need
-                    // to do it this way because of the shadow root.
-                    if (node.nodeName === 'TEXTAREA') {
-                        // Get the parent of the target node
-                        const shadowRoot = node.parentNode.shadowRoot;
-
-                        if (shadowRoot) {
-                            const style = document.createElement('style');
-                            style.textContent = UR_text_area;
-                            // Append the <style> element to the parent node
-                            shadowRoot.appendChild(style);
-                        }
-                    }					
                 });
             }
         }
