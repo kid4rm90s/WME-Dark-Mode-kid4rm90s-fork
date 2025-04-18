@@ -1,14 +1,16 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      0.25.1
+// @version      1.0
 // @description  Enable dark mode in WME.
 // @author       poland_fun
-// @ontributor	 kid4rm90s
+// @contributor	 kid4rm90s and luan_tavares_127
 // @match        *://*.waze.com/*editor*
 // @match        *://*.waze.com/chat*
 // @match        *://*.waze.com/discuss*
-// @grant        GM.addStyle
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_addValueChangeListener
 // @grant        GM_xmlhttpRequest
 // @connect      greasyfork.org
 // @require      https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
@@ -109,6 +111,10 @@ Version
         - Added a Wazebar target
 
 0.25.1 - Minor fix for sdk initialized
+1.00 - Structural improvements to code.
+       Enhanced ability to change dark/light mode. Made it sync across tabs/chat/profile/beta.
+       Added a warning message to warn about FUME contrast enhancements being enabled.
+1.01 - Removed the match for Waze Discuss. Did this to change the Waze Bar
 	
 */
 
@@ -120,1151 +126,1440 @@ Version
 
 (function main() {
   "use strict";
-  const updateMessage = 'Minor fix for sdk initialized';
+  const updateMessage = 'Structural improvements to code.<br>Enhanced ability to toggle dark mode.<br>Made it sync across all affected tabs.<br>Added warning message about FUME contrast enhancements being enabled.<br>1.01 - Hot Fix to remove Waze Discuss match.';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
-  let wmeSDK;
+    let wmeSDK;
+	let   profileTries   = 0;
+	let   settingsTries  = 0;
+    // Currently it is 60 retries (seconds) since we can only add this after a user is
+    // logged in. Change this in the future to be smarter. The quick check is lightweight
+    // so it should not bog anything down.
+    let   maxUIRetries   = 60;
 
-if (window.top === window.self) {
+	function getPreferredTheme() {
+        return GM_getValue('wz-theme', 'dark');
+	}
+
+    function setPreferredTheme(theme) {
+        GM_setValue('wz-theme', theme);
+    }
+	
+    GM_addValueChangeListener("wz-theme", function(key, oldValue, newValue, remote) {
+        let darkModeSwitch = document.getElementById('wme-dark-mode_switch');
+
+        // Since this could be triggered from an external tab, let's make sure this tab's
+        // switch is toggled to the correct state
+        if(darkModeSwitch) {
+            darkModeSwitch.checked = newValue == 'dark';
+        }
+
+        // Get the wz-button by its ID
+        let lightButton = document.getElementById('button_light_theme');
+        if (lightButton) {
+            if (getPreferredTheme() == 'dark') {
+                lightButton.value = "false";
+                lightButton.color = "secondary";
+            } else {
+                lightButton.value = "true";
+                lightButton.color = "primary";
+            }
+        }
+
+        let darkButton = document.getElementById('button_dark_theme');
+        if (darkButton) {
+            if (getPreferredTheme() == 'dark') {
+                darkButton.value = "true";
+                darkButton.color = "primary";
+            } else {
+                darkButton.value = "false";
+                darkButton.color = "secondary";
+            }
+        }
+
+        setTheme(newValue);
+    });	
+
     // We are not in an iframe
-	const darkCSSBase =  `
-    /* Dark mode palette found in the chat code */
-    :host,:root {
-    --alarming: #ff8f8f;
-    --alarming_variant: #ff8f8f;
-    --always_white: #fff;
-    --always_black: #000;
-    --always_dark: #202124;
-    --always_dark_background_default: #202124;
-    --always_dark_background_variant: #000;
-    --always_dark_content_default: #e8eaed;
-    --always_dark_content_p1: #d5d7db;
-    --always_dark_content_p2: #b7babf;
-    --always_dark_inactive: #55595e;
-    --always_dark_surface_default: #3c4043;
-    --background_default: #202124;
-    --background_modal: rgba(32,33,36,0.6);
-    --background_table_overlay: rgba(144,149,156,0.6);
-    --background_variant: #000;
-    --brand_carpool: #1ee592;
-    --brand_waze: #3cf;
-    --cautious: #fce354;
-    --cautious_variant: #ffc400;
-    --content_default: #e8eaed;
-    --content_p1: #d5d7db;
-    --content_p2: #b7babf;
-    --content_p3: #90959c;
-    --disabled_text: #72767d;
-    --hairline: #55595e;
-    --hairline_strong: #72767d;
-    --handle: #d5d7db;
-    --hint_text: #90959c;
-    --ink_elevation: #e8eaed;
-    --ink_on_primary: #fff;
-    --ink_on_primary_focused: hsla(0,0%,100%,0.12);
-    --ink_on_primary_hovered: hsla(0,0%,100%,0.04);
-    --ink_on_primary_pressed: hsla(0,0%,100%,0.1);
-    --leading_icon: #72767d;
-    --on_primary: #202124;
-    --primary: #3cf;
-    --primary_variant: #3cf;
-    --promotion_variant: #c088ff;
-    --report_chat: #1ee592;
-    --report_closure: #feb87f;
-    --report_crash: #d5d7db;
-    --report_gas: #1bab50;
-    --report_hazard: #ffc400;
-    --report_jam: #ff5252;
-    --report_place: #c088ff;
-    --report_police: #1ab3ff;
-    --safe: #1ee592;
-    --safe_variant: #1ee592;
-    --separator_default: #3c4043;
-    --shadow_default: #000;
-    --surface_alt: #18427c;
-    --surface_default: #3c4043;
-    --surface_variant: #3c4043;
-    --surface_variant_blue: #1a3950;
-    --surface_variant_green: #1f432f;
-    --surface_variant_yellow: #4d421d;
-    --surface_variant_orange: #4c342c;
-    --surface_variant_red: #46292c;
-    --surface_variant_purple: #3d285b;
-    background-color: var(--background_default);
-    color: var(--content_default);
-    color-scheme: dark
-    }
-    `	
-
-    const lightCSSBase =  `
-	/* Light Mode default Pallete */
-	:host, :root {
-    --alarming: #ff5252;
-    --alarming_variant: #e42828;
-    --always_white: #ffffff;
-    --always_black: #000000;
-    --always_dark: #202124;
-    --always_dark_background_default: #202124;
-    --always_dark_background_variant: #000000;
-    --always_dark_content_default: #e8eaed;
-    --always_dark_content_p1: #d5d7db;
-    --always_dark_content_p2: #b7babf;
-    --always_dark_inactive: #55595e;
-    --always_dark_surface_default: #3c4043;
-    --background_default: #ffffff;
-    --background_modal: rgba(32, 33, 36, 0.6);
-    --background_table_overlay: rgba(114, 118, 125, 0.6);
-    --background_variant: #f2f4f7;
-    --brand_carpool: #1ee592;
-    --brand_waze: #33ccff;
-    --cautious: #ffc400;
-    --cautious_variant: #e37400;
-    --content_default: #202124;
-    --content_p1: #3c4043;
-    --content_p2: #55595e;
-    --content_p3: #72767d;
-    --disabled_text: #b7babf;
-    --hairline: #d5d7db;
-    --hairline_strong: #90959c;
-    --handle: #f8f9fa;
-    --hint_text: #72767d;
-    --ink_elevation: #ffffff;
-    --ink_on_primary: #202124;
-    --ink_on_primary_focused: rgba(32, 33, 36, 0.12);
-    --ink_on_primary_hovered: rgba(32, 33, 36, 0.04);
-    --ink_on_primary_pressed: rgba(32, 33, 36, 0.1);
-    --leading_icon: #90959c;
-    --on_primary: #ffffff;
-    --primary: #0099ff;
-    --primary_variant: #0075e3;
-    --promotion_variant: #842feb;
-    --report_chat: #1ee592;
-    --report_closure: #feb87f;
-    --report_crash: #d5d7db;
-    --report_gas: #1bab50;
-    --report_hazard: #ffc400;
-    --report_jam: #ff5252;
-    --report_place: #c088ff;
-    --report_police: #1ab3ff;
-    --safe: #1bab50;
-    --safe_variant: #118742;
-    --separator_default: #e8eaed;
-    --shadow_default: #3c4043;
-    --surface_alt: #e5f6ff;
-    --surface_default: #f2f4f7;
-    --surface_variant: #e8eaed;
-    --surface_variant_blue: #edf8ff;
-    --surface_variant_green: #eff9f3;
-    --surface_variant_yellow: #fffaeb;
-    --surface_variant_orange: #fff5f1;
-    --surface_variant_red: #fff1f1;
-    --surface_variant_purple: #f8f2ff;
-    background-color: var(--background_default);
-    color: var(--content_default);
-    color-scheme: light;
-	}
-    `
-	
     const cssModifications = `
-    #waze-logo {
-    filter: invert(100%);
-    }
+			/* Dark mode palette found in the chat code */
+			[wz-theme="dark"] {
+				--alarming: #ff8f8f;
+				--alarming_variant: #ff8f8f;
+				--always_white: #fff;
+				--always_black: #000;
+				--always_dark: #202124;
+				--always_dark_background_default: #202124;
+				--always_dark_background_variant: #000;
+				--always_dark_content_default: #e8eaed;
+				--always_dark_content_p1: #d5d7db;
+				--always_dark_content_p2: #b7babf;
+				--always_dark_inactive: #55595e;
+				--always_dark_surface_default: #3c4043;
+				--background_default: #202124;
+				--background_modal: rgba(32,33,36,0.6);
+				--background_table_overlay: rgba(144,149,156,0.6);
+				--background_variant: #000;
+				--brand_carpool: #1ee592;
+				--brand_waze: #3cf;
+				--cautious: #fce354;
+				--cautious_variant: #ffc400;
+				--content_default: #e8eaed;
+				--content_p1: #d5d7db;
+				--content_p2: #b7babf;
+				--content_p3: #90959c;
+				--disabled_text: #72767d;
+				--hairline: #55595e;
+				--hairline_strong: #72767d;
+				--handle: #d5d7db;
+				--hint_text: #90959c;
+				--ink_elevation: #e8eaed;
+				--ink_on_primary: #fff;
+				--ink_on_primary_focused: hsla(0,0%,100%,0.12);
+				--ink_on_primary_hovered: hsla(0,0%,100%,0.04);
+				--ink_on_primary_pressed: hsla(0,0%,100%,0.1);
+				--leading_icon: #72767d;
+				--on_primary: #202124;
+				--primary: #3cf;
+				--primary_variant: #3cf;
+				--promotion_variant: #c088ff;
+				--report_chat: #1ee592;
+				--report_closure: #feb87f;
+				--report_crash: #d5d7db;
+				--report_gas: #1bab50;
+				--report_hazard: #ffc400;
+				--report_jam: #ff5252;
+				--report_place: #c088ff;
+				--report_police: #1ab3ff;
+				--safe: #1ee592;
+				--safe_variant: #1ee592;
+				--separator_default: #3c4043;
+				--shadow_default: #000;
+				--surface_alt: #18427c;
+				--surface_default: #3c4043;
+				--surface_variant: #3c4043;
+				--surface_variant_blue: #1a3950;
+				--surface_variant_green: #1f432f;
+				--surface_variant_yellow: #4d421d;
+				--surface_variant_orange: #4c342c;
+				--surface_variant_red: #46292c;
+				--surface_variant_purple: #3d285b;
+				background-color: var(--background_default);
+				color: var(--content_default);
+				color-scheme: dark
+			}	
 
-    /* 'Show dismissed alerts again after' button */
-    .alert-settings .alert-settings-period-label {
-    color: var(--content_p1);;
-    }
+			[wz-theme="dark"] #waze-logo {
+				filter: invert(100%);
+			}
 
-    body{
-    background-color: var(--background_default);
-    color: var(--content_p1);
-    }
+			/* 'Show dismissed alerts again after' button */
+			[wz-theme="dark"] .alert-settings .alert-settings-period-label {
+				color: var(--content_p1);
+				;
+			}				
 
-    /* Background of all panes which pop in on left */
-    .tab-content {
-    background: var(--background_default);
-    }
+			[wz-theme="dark"] body {
+				background-color: var(--background_default);
+				color: var(--content_p1);
+			}
 
-    /* 'Map layers' pane */
-    .layer-switcher .menu {
-    background: var(--background_default);
-    }
-    h1,h2,h3,h4,h5,h6,.h1,.h2,.h3,.h4,.h5,.h6 {
-    color: var(--content_p1) !important;
-    }
-    .label-text {
-    color: var(--content_p1) !important;
-    }
+			/* Background of all panes which pop in on left */
+			[wz-theme="dark"] .tab-content {
+				background: var(--background_default);
+			}
 
-    /* Background of 'Add new Event' Under Events */
-    .mteListViewFooter--u_CxF {
-    background: var(--background_default);
-    }
+			/* 'Map layers' pane */
+			[wz-theme="dark"] .layer-switcher .menu {
+				background: var(--background_default);
+			}
 
-    /* Footer background */
-    .wz-map-ol-footer {
-    background-color: var(--background_default);
-    }
+			[wz-theme="dark"] h1,
+			[wz-theme="dark"] h2,
+			[wz-theme="dark"] h3,
+			[wz-theme="dark"] h4,
+			[wz-theme="dark"] h5,
+			[wz-theme="dark"] h6,
+			[wz-theme="dark"] .h1,
+			[wz-theme="dark"] .h2,
+			[wz-theme="dark"] .h3,
+			[wz-theme="dark"] .h4,
+			[wz-theme="dark"] .h5,
+			[wz-theme="dark"] .h6 {
+				color: var(--content_p1) !important;
+			}
+				
+			[wz-theme="dark"] .label-text {
+				color: var(--content_p1) !important;
+			}
 
-    /* Links in footer */
-    a.wz-map-black-link {
-    color: var(--content_p1);
-    }
-    a {
-    color: var(--content_p1);
-    }
+			/* Background of 'Add new Event' Under Events */
+			[wz-theme="dark"] .mteListViewFooter--u_CxF {
+				background: var(--background_default);
+			}
 
-    /* Lat/Long in footer*/
-    .wz-map-ol-control-span-mouse-position {
-    color: var(--content_p1);
-    }
+			/* Footer background */
+			[wz-theme="dark"] .wz-map-ol-footer {
+				background-color: var(--background_default);
+			}
 
-    /* Map imagery attribution */
-    .wz-map-ol-control-attribution {
-    color: var(--content_p1);
-    }
+			/* Links in footer */
+			[wz-theme="dark"] a.wz-map-black-link {
+				color: var(--content_p1);
+			}
 
-    /* Background of script list/buttons */
-    #sidebar .nav-tabs {
-    background: var(--background_default);
-    }
+			[wz-theme="dark"] a {
+				color: var(--content_p1);
+			}
 
-    /* Background of active script button */
-    #sidebar .nav-tabs li.active a {
-    background: var(--always_dark_surface_default);
-    }
+			/* Lat/Long in footer*/
+			[wz-theme="dark"] .wz-map-ol-control-span-mouse-position {
+				color: var(--content_p1);
+			}
 
-	.nav>li>a:hover {
-    background: var(--always_dark_inactive);
-	}
+			/* Map imagery attribution */
+			[wz-theme="dark"] .wz-map-ol-control-attribution {
+				color: var(--content_p1);
+			}
 
-    /* Script button text */
-    #sidebar .nav-tabs li a {
-    color: var(--content_p1);
-    }
+			/* Background of script list/buttons */
+			[wz-theme="dark"] #sidebar .nav-tabs {
+				background: var(--background_default);
+			}
 
-    /* Background of 'Update results when map moves' in Solve pane */
-    .issues-tracker-wrapper .issues-tracker-footer  {
-    background: var(--background_default);
-    }
+			/* Background of active script button */
+			[wz-theme="dark"] #sidebar .nav-tabs li.active a {
+				background: var(--always_dark_surface_default);
+			}
 
-    /* Route Speeds Plugin */
-    #sidepanel-routespeeds {
-    color: var(--content_p1) !important;
-    }
-    #routespeeds-passes-label {
-    color: var(--content_p1) !important;
-    }
-    .waze-btn.waze-btn-blue {
-    color: white !important;
-    }
+			[wz-theme="dark"] .nav>li>a:hover {
+				background: var(--always_dark_inactive);
+			}
 
-	
+			/* Script button text */
+			[wz-theme="dark"] #sidebar .nav-tabs li a {
+				color: var(--content_p1);
+			}
+
+			/* Background of 'Update results when map moves' in Solve pane */
+			[wz-theme="dark"] .issues-tracker-wrapper .issues-tracker-footer {
+				background: var(--background_default);
+			}
+
+			/* Route Speeds Plugin */
+			[wz-theme="dark"] #sidepanel-routespeeds {
+				color: var(--content_p1) !important;
+			}
+
+			[wz-theme="dark"] #routespeeds-passes-label {
+				color: var(--content_p1) !important;
+			}
+
+			[wz-theme="dark"] .waze-btn.waze-btn-blue {
+				color: white !important;
+			}
+			
     /* Textboxes/Dropdowns/Input Feilds */
-    input[type=text] {
-    color: black !important; /* for to use with house numbering*/
+			[wz-theme="dark"] input[type=text] {
+		color: black !important; /* for to use with house numbering*/
     }
-	input[type=email],input[type=number],input[type=password],select,button,textarea,.form-control {
-    //color: var(--content_p2) !important;
-	color: white !important;
-    }
+			[wz-theme="dark"] input[type=email],
+			[wz-theme="dark"] input[type=number],
+			[wz-theme="dark"] input[type=password],
+			[wz-theme="dark"] select,
+			[wz-theme="dark"] button,
+			[wz-theme="dark"] textarea,
+			[wz-theme="dark"] .form-control {
+				//color: var(--content_p2) !important;
+		color: white !important;	
+			}
 
-    /* TTS Playback dialog */
-    .tts-playback .tippy-box[data-theme=tts-playback-tooltip] {
-    background: var(--background_default);
-    box-shadow: rgb(213, 215, 219) 0px 0px 0px 1px
-    }
+			/* TTS Playback dialog */
+			[wz-theme="dark"] .tts-playback .tippy-box[data-theme=tts-playback-tooltip] {
+				background: var(--background_default);
+				box-shadow: rgb(213, 215, 219) 0px 0px 0px 1px
+			}
 
-    a:hover, a:visited {
-    color: var(--content_p1);
-    }
-	
-	/*user editor environment panel*/
-	#environmentSelect {
-    background-color: var(--background_default) !important;
-    }
-	.leaflet-control-layers-expanded {
-	background-color: var(--background_default) !important;
-	color: var(--content_p1);
-	}	
-	
-    /* UR section headers */
-    .problem-edit .section .title {
-    background-color: var(--always_dark_inactive);
-    color: var(--content_p1);
-    border-bottom: 1px solid var(--always_dark_surface_default);
-    border-top: 1px solid var(--always_dark_surface_default);
-    }
-    .issue-panel-header .sub-title-and-actions {
-    color: var(--content_p2);
-    }
-    .conversation-view .comment-list {
-    border: 1px solid var(--always_dark_surface_default);
-    }
+			[wz-theme="dark"] a:hover,
+			[wz-theme="dark"] a:visited {
+				color: var(--content_p1);
+			}
 
-    /* 'Search This Area' box */
-    .container--wzXTu {
-    background: var(--background_default);
-    }
+			/*user editor environment panel*/
+			[wz-theme="dark"] #environmentSelect {
+				background-color: var(--background_default) !important;
+			}
 
-    /* 'Filter Map issues' pane */
-    #filter-panel-region {
-    background: var(--background_default);
-    }
+			[wz-theme="dark"] .leaflet-control-layers-expanded {
+				background-color: var(--background_default) !important;
+				color: var(--content_p1);
+			}
+
+			/* UR section headers */
+			[wz-theme="dark"] .problem-edit .section .title {
+				background-color: var(--always_dark_inactive);
+				color: var(--content_p1);
+				border-bottom: 1px solid var(--always_dark_surface_default);
+				border-top: 1px solid var(--always_dark_surface_default);
+			}
+
+			[wz-theme="dark"] .issue-panel-header .sub-title-and-actions {
+				color: var(--content_p2);
+			}
+
+			[wz-theme="dark"] .conversation-view .comment-list {
+				border: 1px solid var(--always_dark_surface_default);
+			}
+
+			/* 'Search This Area' box */
+			[wz-theme="dark"] .container--wzXTu {
+				background: var(--background_default);
+			}
+
+			/* 'Filter Map issues' pane */
+			[wz-theme="dark"] #filter-panel-region {
+				background: var(--background_default);
+			}
+
+			/* PL box */
+			[wz-theme="dark"] [class^="container"]::after {
+				background: var(--always_dark_surface_default);
+				height: 2px;
+			}
+
+			/* Changelog */
+			[wz-theme="dark"] [class^="changesLogContainer"] {
+				background: var(--background_default);
+			}
+
+			/* Online editors */
+			[wz-theme="dark"] .online-editors-bubble {
+				--wz-button-background-color: var(--always_dark_surface_default);
+				--wz-button-border: var(--always_dark_surface_default);
+			}
+
+			[wz-theme="dark"] .online-editors-bubble:hover {
+				--wz-button-background-color: var(--always_dark_inactive);
+				--wz-button-border: var(--always_dark_surface_default);
+			}
+
+			/* Entry Point Buttons */
+			[wz-theme="dark"] .navigation-point-actions>wz-button {
+				--wz-button-background-color: var(--always_dark_surface_default);
+				--wz-button-border: var(--always_dark_surface_default);
+			}
+	/* WME Switch Uturns */
+			[wz-theme="dark"] .disallow-connections,
+			[wz-theme="dark"] .allow-connections {
+				--wz-button-background-color: var(--always_dark_surface_default);
+			}
 
     /* PL box */
-    [class^="container"]::after {
-    background: var(--always_dark_surface_default);
-    height: 2px;
-    }
-
-    /* Changelog */
-    [class^="changesLogContainer"] {
-    background: var(--background_default);
-    }
-
-    /* Online editors */
-    .online-editors-bubble {
-    --wz-button-background-color: var(--always_dark_surface_default);
-    --wz-button-border: var(--always_dark_surface_default);
-    }
-    .online-editors-bubble:hover {
-    --wz-button-background-color: var(--always_dark_inactive);
-    --wz-button-border: var(--always_dark_surface_default);
-    }
-
-    /* Entry Point Buttons */
-    .navigation-point-actions > wz-button {
-    --wz-button-background-color: var(--always_dark_surface_default);
-    --wz-button-border: var(--always_dark_surface_default);
-    }
-
-    /* WME Switch Uturns */
-    .disallow-connections, .allow-connections {
-    --wz-button-background-color: var(--always_dark_surface_default);
-    }
-
-    /* PL box */
-    [class^="bordered"] * {
-    background-color: var(--background_default);
-    }
+			[wz-theme="dark"] [class^="bordered"] * {
+				background-color: var(--background_default);
+			}
 
     /* Turn Restrictions */
-    .restriction-editing-region .restriction-editing-section .restriction-editing-container {
-    background-color: var(--always_dark_surface_default);
-    }
-    .form-control {
-    background: var(--always_dark_surface_default);
-    }
-    .timeframe-hours-controls {
-    --background_variant: var(--always_dark_inactive);
-    }
-    .restriction-editing-region .timeframe-editing-region .timeframe-section-dates .datepicker {
-    color: black !important;
-    }
-    .restrictions-summary .restrictions-table tr {
-    background: var(--always_dark_surface_default) !important;
-    }
-    .restrictions-summary .restrictions-table th {
-    background: var(--always_dark_inactive) !important;
-    }
+			[wz-theme="dark"] .restriction-editing-region .restriction-editing-section .restriction-editing-container {
+				background-color: var(--always_dark_surface_default);
+			}
 
+			[wz-theme="dark"] .form-control {
+				background: var(--always_dark_surface_default);
+			}
+
+			[wz-theme="dark"] .timeframe-hours-controls {
+				--background_variant: var(--always_dark_inactive);
+			}
+
+			[wz-theme="dark"] .restriction-editing-region .timeframe-editing-region .timeframe-section-dates .datepicker {
+				color: black !important;
+			}
+
+			[wz-theme="dark"] .restrictions-summary .restrictions-table tr {
+				background: var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] .restrictions-summary .restrictions-table th {
+				background: var(--always_dark_inactive) !important;
+			}
+			
     /* Turn Instructions */
-    .turn-instructions-panel .exit-signs,.turn-instructions-panel .turn-instructions,.turn-instructions-panel .towards-instructions {
-    background: var(--always_dark_surface_default);
-    }
-    .turn-instructions-panel .exit-sign-item,.turn-instructions-panel .turn-instruction-item {
-    background: var(--always_dark_surface_default);
-    border: 1px dashed var(--always_dark_inactive);
-    }
+			[wz-theme="dark"] .turn-instructions-panel .exit-signs,
+			[wz-theme="dark"] .turn-instructions-panel .turn-instructions,
+			[wz-theme="dark"] .turn-instructions-panel .towards-instructions {
+				background: var(--always_dark_surface_default);
+			}
 
-    .wz-tooltip-content-holder {
-    background-color: var(--background_default);
-    }
+			[wz-theme="dark"] .turn-instructions-panel .exit-sign-item,
+			[wz-theme="dark"] .turn-instructions-panel .turn-instruction-item {
+				background: var(--always_dark_surface_default);
+				border: 1px dashed var(--always_dark_inactive);
+			}
+
+			[wz-theme="dark"] .wz-tooltip-content-holder {
+				background-color: var(--background_default);
+			}
 
     /* Date Range Pickers */
-    .daterangepicker {
-    background-color: var(--background_default) !important;
-    border: 1px solid black;
-    }
-    .daterangepicker .calendar-table {
-    background-color: var(--background_default);
-    }
-    .daterangepicker td.off {
-    background-color: var(--background_default);
-    color: var(--content_p1);
-    }
-    .daterangepicker td.active {
-    background-color: #357ebd !important;
-    }
-    .daterangepicker .available {
-    background-color: var(--always_dark_surface_default);
-    }
-    .daterangepicker td.today {
-    background-color: var(--always_dark_surface_default);
-    border: 2px solid var(--safe);
-    }
-    .daterangepicker .calendar-table .next span, .daterangepicker .calendar-table .prev span {
-    border: solid var(--content_p1);
-    border-width: 0 2px 2px 0;
-    }
+			[wz-theme="dark"] .daterangepicker {
+				background-color: var(--background_default) !important;
+				border: 1px solid black;
+			}
+			
+			[wz-theme="dark"] .daterangepicker .calendar-table {
+				background-color: var(--background_default);
+			}
 
+			[wz-theme="dark"] .daterangepicker td.off {
+				background-color: var(--background_default);
+				color: var(--content_p1);
+			}
+
+			[wz-theme="dark"] .daterangepicker td.active {
+				background-color: #357ebd !important;
+			}
+
+			[wz-theme="dark"] .daterangepicker .available {
+				background-color: var(--always_dark_surface_default);
+			}
+
+			[wz-theme="dark"] .daterangepicker td.today {
+				background-color: var(--always_dark_surface_default);
+				border: 2px solid var(--safe);
+			}
+
+			[wz-theme="dark"] .daterangepicker .calendar-table .next span,
+			[wz-theme="dark"] .daterangepicker .calendar-table .prev span {
+				border: solid var(--content_p1);
+				border-width: 0 2px 2px 0;
+			}
+			
     /* House Numbers */
-    .house-number-marker {
-    background: var(--background_default);
-    }
-    .house-numbers-layer .house-number .content .input-wrapper {
-    background-color: #07ff00 !important; /* Bright Green */
-    }
+			[wz-theme="dark"] .house-number-marker {
+				background: var(--background_default);
+			}
+
+			[wz-theme="dark"] .house-numbers-layer .house-number .content .input-wrapper {
+				background-color: #07ff00 !important; /* Bright Green */
+			}
+
 /******* UR Comment - Enhancement *****************************/
-    #urceDiv {
-    background-color: var(--background_default) !important;
-    box-shadow: 5px 5px 10px black !important;
-    }
-    .urceDivCloseButton {
-    background-color: var(--surface_default) !important;
-    box-shadow: 5px 5px 10px black !important;
-    }
+			[wz-theme="dark"] #urceDiv {
+				background-color: var(--background_default) !important;
+				box-shadow: 5px 5px 10px black !important;
+			}
+			
+			[wz-theme="dark"] .urceDivCloseButton {
+				background-color: var(--surface_default) !important;
+				box-shadow: 5px 5px 10px black !important;
+			}
 
     /* Button text color */
-    .btn.btn-default {
-    color: var(--content_p1);
-	background-color: var(--always_dark_surface_default) !important;
-    }
+			[wz-theme="dark"] .btn.btn-default {
+				color: var(--content_p1);
+				background-color: var(--always_dark_surface_default) !important;
+			}
 
-    /* URC-E Plugin */
-    #sidepanel-urc-e #panel-urce-comments .URCE-openLink {
-    color: var(--content_p3) !important;
-    }
-    .URCE-span {
-    color: var(--content_p1);
-    }
-    .urceToolsButton {
-    background-color: var(--always_dark_surface_default) !important;
-    }
-    #zoomOutLink1, #zoomOutLink2, #zoomOutLink3 {
-    color: var(--content_p1) !important;
-    }
+	/* URC-E Plugin */
+			[wz-theme="dark"] #sidepanel-urc-e #panel-urce-comments .URCE-openLink {
+				color: var(--content_p3) !important;
+			}
+
+			[wz-theme="dark"] .URCE-span {
+				color: var(--content_p1);
+			}
+
+			[wz-theme="dark"] .urceToolsButton {
+				background-color: var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] #zoomOutLink1,
+			[wz-theme="dark"] #zoomOutLink2,
+			[wz-theme="dark"] #zoomOutLink3 {
+				color: var(--content_p1) !important;
+			}
 
     /* Grey screen when your save has errors */
-    #map-viewport-overlay {
-    background-color: var(--background_default);
-    }
+			[wz-theme="dark"] #map-viewport-overlay {
+				background-color: var(--background_default);
+			}
+
     /* default background is not super noticble here, so we do black */
-    #sidebar .overlay.editingDisabled {
-    background-color: black;
-    }
+			[wz-theme="dark"] #sidebar .overlay.editingDisabled {
+				background-color: black;
+			}
 
     /* Notification pane */
-   .notifications-empty-container .centered-content .text {
-   color: var(--content_p1);
-   }
-   .notification-content-container .notification-content-text-container .body {
-   color: var(--content_p1) !important;
-   }
+			[wz-theme="dark"] .notifications-empty-container .centered-content .text {
+				color: var(--content_p1);
+			}
+
+			[wz-theme="dark"] .notification-content-container .notification-content-text-container .body {
+				color: var(--content_p1) !important;
+			}
    
    /* City Names */
-    .city-name-marker, #edit-panel .city-feature-editor .feature-editor-header {
-    background-color: var(--background_default);
-    }
-    .city-name-marker:hover, .city-name-marker.selected {
-    color: black;
-    }
+			[wz-theme="dark"] .city-name-marker,
+			[wz-theme="dark"] #edit-panel .city-feature-editor .feature-editor-header {
+				background-color: var(--background_default);
+			}
 
-    /* WMEPH Plugin */
-    /* These are gray icons. We can either make a white border per icon
-       or put a white boarder around all of them */
-    #WMEPH_services {
-    background-color: white;
-    }
-    /*
-    .serv-valet {
-    filter: invert(100%);
-    }
-    .serv-wifi {
-    filter: invert(100%);
-    }
-    .serv-restrooms {
-    filter: invert(100%);
-    }
-    .serv-credit {
-    filter: invert(100%);
-    }
-    .serv-reservations {
-    filter: invert(100%);
-    }
-    .serv-outdoor {
-    filter: invert(100%);
-    }
-    .serv-ac {
-    filter: invert(100%);
-    }
-    .serv-parking {
-    filter: invert(100%);
-    }
-    .serv-curbside {
-    filter: invert(100%);
-    }
-    .serv-wheelchair {
-    filter: invert(100%);
-    }
-    .serv-247 {
-    filter: invert(100%);
-    }
-    */
-    #WMEPH_banner .banner-row.gray {
-    color: var(--content_p1) !important;
-    background-color: var(--surface_default) !important;
-    }
-    #wmeph-hours-list {
-    color: var(--content_p1) !important;
-    background-color: var(--background_default) !important;
-    }
-    #WMEPH_banner .wmeph-btn {
-    background-color: var(--background_default) !important;
-    }
-    .lock-edit-view > wz-label {
-    background-color: var(--background_default)
-    }
+			[wz-theme="dark"] .city-name-marker:hover,
+			[wz-theme="dark"] .city-name-marker.selected {
+				color: black;
+			}
 
+	/* WMEPH Plugin */
+			/* These are gray icons. We can either make a white border per icon or put a white boarder around all of them */
+			[wz-theme="dark"] #WMEPH_services {
+				background-color: white;
+			}
+
+			/*
+			[wz-theme="dark"] .serv-valet {
+				filter: invert(100%);
+			}
+
+			[wz-theme="dark"] .serv-wifi {
+				filter: invert(100%);
+			}
+
+			[wz-theme="dark"] .serv-restrooms {
+				filter: invert(100%);
+			}
+
+			[wz-theme="dark"] .serv-credit {
+				filter: invert(100%);
+			}
+
+			[wz-theme="dark"] .serv-reservations {
+				filter: invert(100%);
+			}
+
+			[wz-theme="dark"] .serv-outdoor {
+				filter: invert(100%);
+			}
+
+			[wz-theme="dark"] .serv-ac {
+				filter: invert(100%);
+			}
+
+			[wz-theme="dark"] .serv-parking {
+				filter: invert(100%);
+			}
+
+			[wz-theme="dark"] .serv-curbside {
+				filter: invert(100%);
+			}
+
+			[wz-theme="dark"] .serv-wheelchair {
+				filter: invert(100%);
+			}
+
+			[wz-theme="dark"] .serv-247 {
+				filter: invert(100%);
+			}
+			*/
+
+			[wz-theme="dark"] #WMEPH_banner .banner-row.gray {
+				color: var(--content_p1) !important;
+				background-color: var(--surface_default) !important;
+			}
+
+			[wz-theme="dark"] #wmeph-hours-list {
+				color: var(--content_p1) !important;
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] #WMEPH_banner .wmeph-btn {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] .lock-edit-view>wz-label {
+				background-color: var(--background_default)
+			}
+			
     /* Click Saver */
-    .cs-group-label {
-    color: var(--content_p1) !important;
-    }
+			[wz-theme="dark"] .cs-group-label {
+				color: var(--content_p1) !important;
+			}
 
     /* Turn, Segment Closures */
-    .edit-closure {
-    background: var(--background_default) !important;
-    }
-    .closure-node-item {
-    background-color: var(--background_default)!important;
-    }
-    .closure-item .dates {
-    color: var(--content_p1) !important;
-    }
+			[wz-theme="dark"] .edit-closure {
+				background: var(--background_default) !important;
+			}
+			
+			[wz-theme="dark"] .closure-node-item {
+				background-color: var(--background_default) !important;
+			}
 
-    [class^="welcome_popup_container"] {
-    background-color: var(--background_default);
-    }
-    [class^="welcome_popup_image"] {
-    filter: invert(87%);
-    }
-	
+			[wz-theme="dark"] .closure-item .dates {
+				color: var(--content_p1) !important;
+			}
+
+			[wz-theme="dark"] [class^="welcome_popup_container"] {
+				background-color: var(--background_default);
+			}
+
+			[wz-theme="dark"] [class^="welcome_popup_image"] {
+				filter: invert(87%);
+			}
+			
     /* Previous Build dialog */
-    #map-message-container .snapshot-message .snapshot-mode-message {
-    background: var(--background_default) !important;
-    }
-
+			[wz-theme="dark"] #map-message-container .snapshot-message .snapshot-mode-message {
+				background: var(--background_default) !important;
+			}
+			
     /* Script update message */
-    #WWSU-Container, .WWSU-script-item, #WWSU-script-update-info {
-    background-color: var(--background_default) !important;
-    }
+			[wz-theme="dark"] #WWSU-Container,
+			[wz-theme="dark"] .WWSU-script-item,
+			[wz-theme="dark"] #WWSU-script-update-info {
+				background-color: var(--background_default) !important;
+			}
 
     /* WME Toolbox Extension */
-    .tb-tabContainer {
-    background-color: var(--background_default) !important;
-    }
-    .tb-tab-tab {
-    background-color: var(--background_default) !important
-    }
-    .tb-tab-tab > img {
-    filter: invert(100%);
-    }
-    .tb-feature-label-image {
-    filter: invert(87%);
-    }
-    .ToolboxMeasurementTool {
-    background-color: var(--background_default) !important;
-    }
-    #Country, #State, #City, #Street {
-    color: var(--content_p1) !important;
-    }
-    .ui-dialog-buttonset > button {
-    background-color: var(--background_default) !important;
-    color: var(--content_p1) !important;
-    }
+			[wz-theme="dark"] .tb-tabContainer {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] .tb-tab-tab {
+				background-color: var(--background_default) !important
+			}
+
+			[wz-theme="dark"] .tb-tab-tab>img {
+				filter: invert(100%);
+			}
+
+			[wz-theme="dark"] .tb-feature-label-image {
+				filter: invert(87%);
+			}
+
+			[wz-theme="dark"] .ToolboxMeasurementTool {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] #Country,
+			[wz-theme="dark"] #State,
+			[wz-theme="dark"] #City,
+			[wz-theme="dark"] #Street {
+				color: var(--content_p1) !important;
+			}
+
+			[wz-theme="dark"] .ui-dialog-buttonset>button {
+				background-color: var(--background_default) !important;
+				color: var(--content_p1) !important;
+			}
+			
     /* .ui-widget-content.newversionpanel, .ui-widget-content.ui-dialog-buttonpane, .WMETB_NewVersionPanel.ui-widget-content { */
-    .ui-widget-content, .ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {
-		color: var(--content_p1) !important;
+			[wz-theme="dark"] .ui-widget-content,
+			[wz-theme="dark"] .ui-state-default,
+			[wz-theme="dark"] .ui-widget-content .ui-state-default,
+			[wz-theme="dark"] .ui-widget-header .ui-state-default {
+				color: var(--content_p1) !important;
 	background: rgba(0, 0, 0, 0.50) !important; /* overrided */
-	} 
-	.ui-widget-content a {
-	color: white !important; /*color overrided*/
-	} 
-	.ui-widget-header, #WMETB_NewVersionPanel {
-	color: var(--content_p1) !important;
-	background: var(--background_default) !important;
-	}
-	.ui-button.ui-widget.ui-state-default.ui-corner-all.ui-button-icon-only.ui-dialog-titlebar-close {
-	background-color: var(--background_default) !important;
-	color: var(--content_p1) !important;
-	border: 1px solid var(--always_dark_inactive) !important;
-	}
-    .ui-widget-overlay {
-    background: black !important
-    }
+	        } 
+
+			[wz-theme="dark"] .ui-widget-content a {
+				color: var(--content_p1) !important;
+			}
+
+			[wz-theme="dark"] .ui-widget-header,
+			[wz-theme="dark"] #WMETB_NewVersionPanel {
+				color: var(--content_p1) !important;
+				background: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] .ui-button.ui-widget.ui-state-default.ui-corner-all.ui-button-icon-only.ui-dialog-titlebar-close {
+				background-color: var(--background_default) !important;
+				color: var(--content_p1) !important;
+				border: 1px solid var(--always_dark_inactive) !important;
+			}
+
+			[wz-theme="dark"] .ui-widget-overlay {
+				background: black !important
+			}
 
     /* Editor info -------------------------------------- */
-    #header {
-    background-color: var(--background_default);
-    }
-    #header .user-headline .header-info {
-    background-color: var(--always_dark_surface_default);
-    }
-    #recent-edits .recent-edits-list .recent-edits-list-header {
-    background-color: var(--background_default);
-    }
-    #recent-edits .recent-edits-list .recent-edits-list-items .transaction-header {
-    background-color: var(--always_dark_surface_default);
-    }
-    #recent-edits .recent-edits-list .recent-edits-list-items .transaction-header.active, #recent-edits .recent-edits-list .recent-edits-list-items .transaction-header:hover {
-    background-color: var(--always_dark_background_default);
-    }
-    #recent-edits .recent-edits-list .recent-edits-list-items .transaction-content {
-    background-color: var(--always_black);
-    }
-    .type-icon {
-    filter: invert(100%);
-    }
-   .map .leaflet-tile-pane {
-   filter: grayscale(100%) brightness(0.8) contrast(160%) invert(77%)
-   }
-   #recent-edits .recent-edits-map-polygon {
-   fill: white;
-   }
+			[wz-theme="dark"] #header {
+				background-color: var(--background_default);
+			}
+
+			[wz-theme="dark"] #header .user-headline .header-info {
+				background-color: var(--always_dark_surface_default);
+			}
+
+			[wz-theme="dark"] #recent-edits .recent-edits-list .recent-edits-list-header {
+				background-color: var(--background_default);
+			}
+
+			[wz-theme="dark"] #recent-edits .recent-edits-list .recent-edits-list-items .transaction-header {
+				background-color: var(--always_dark_surface_default);
+			}
+
+			[wz-theme="dark"] #recent-edits .recent-edits-list .recent-edits-list-items .transaction-header.active,
+			[wz-theme="dark"] #recent-edits .recent-edits-list .recent-edits-list-items .transaction-header:hover {
+				background-color: var(--always_dark_background_default);
+			}
+
+			[wz-theme="dark"] #recent-edits .recent-edits-list .recent-edits-list-items .transaction-content {
+				background-color: var(--always_black);
+			}
+
+			[wz-theme="dark"] .type-icon {
+				filter: invert(100%);
+			}
+
+			[wz-theme="dark"] .map .leaflet-tile-pane {
+				filter: grayscale(100%) brightness(0.8) contrast(160%) invert(77%)
+			}
+
+			[wz-theme="dark"] #recent-edits .recent-edits-map-polygon {
+				fill: white;
+			}
 
    /* Practice Mode intro text */
-   .sandbox .links a {
-   color: var(--content_p1);
-   }
-   .sandbox .welcome-container {
-    background-color: var(--background_default);
-   }
-      
+			[wz-theme="dark"] .sandbox .links a {
+				color: var(--content_p1);
+			}
+
+			[wz-theme="dark"] .sandbox .welcome-container {
+				background-color: var(--background_default);
+			}
+
     /************* UR List ********************************/
-    .list-item-card-title {
-    color: var(--content_p1) !important;
-    }
-    .list-item-card wz-caption {
-    color: var(--content_p2) !important;
-    }
+			[wz-theme="dark"] .list-item-card-title {
+				color: var(--content_p1) !important;
+			}
+
+			[wz-theme="dark"] .list-item-card wz-caption {
+				color: var(--content_p2) !important;
+			}
 
 /******* Road Selector Plugin ******************************************/
-   .table-striped>tbody>tr:nth-of-type(odd) {
-   background-color: var(--always_dark_surface_default);
-   }
-   .table-hover>tbody>tr:hover {
-   background-color: var(--always_dark_inactive);
-   }
-   #outRSExpr {
-   color: var(--content_p2);
-   }
-   #RSoperations > button, #RSselection > button, #btnRSSave {
-   color: white !important;
-   }
-   #inRSSaveName {
-   color: var(--content_p1) !important; /* font color overrided */
-    } 
-   tbody input[type="text"], tbody input[type="number"] {
+			[wz-theme="dark"] .table-striped>tbody>tr:nth-of-type(odd) {
+				background-color: var(--always_dark_surface_default);
+			}
+
+			[wz-theme="dark"] .table-hover>tbody>tr:hover {
+				background-color: var(--always_dark_inactive);
+			}
+
+			[wz-theme="dark"] #outRSExpr {
+				color: var(--content_p2);
+			}
+
+			[wz-theme="dark"] #RSoperations>button,
+			[wz-theme="dark"] #RSselection>button,
+			[wz-theme="dark"] #btnRSSave {
+				color: white !important;
+			}
+
+   [wz-theme="dark"] #inRSSaveName,
+   [wz-theme="dark"] tbody input[type="text"], 
+   [wz-theme="dark"] tbody input[type="number"] {
    color: var(--content_p1) !important; /* font color overrided */
     } 
 
    /* UR-MP Tracking Plugin */
-   .popup-pannel-trigger-class-FilterUR,
-   .popup-pannel-contents-closed-class-FilterUR,
-   .popup-pannel-contents-open-class-FilterUR,
-   .popup-pannel-trigger-class-FilterMP,
-   .popup-pannel-contents-closed-class-FilterM,
-   .popup-pannel-contents-open-class-FilterMP,
-   .popup-pannel-trigger-class-FilterMC,
-   .popup-pannel-contents-closed-class-FilterMC,
-   .popup-pannel-contents-open-class-FilterMC,
-   .popup-pannel-trigger-class-FilterPUR,
-   .popup-pannel-contents-closed-class-FilterPUR,
-   .popup-pannel-contents-open-class-FilterPUR
-   {
-   color: black !important;
-   }
-   .urt-table {
-   color: var(--content_p1);
-   }
-   .urt-table thead, .urt-table thead a, .urt-table thead a:hover {
-   color: black !important;
-   }
-   .urt-bg-highlighted, .urt-bg-highlighted a, .urt-bg-highlighted a:hover {
-   color: black !important;
-   }
-   .urt-bg-ifollow {
-   color: var(--content_p1);
-   background-color: var(--always_dark_inactive) !important;
-   }
-   .urt-bg-selected, .urt-bg-selected a, .urt-bg-selected a:hover {
-   color: black !important;
-   }
-   .urt-bg-newcomments {
-   color: black !important;
-   }
-   #urt-a-export > img {
-   filter: invert(100%);
-   }
-   #urt-a-export-csv > img {
-   filter: invert(100%);
-   }
-   #urt-progressBarInfo {
-   color: black !important;
-   }
+			[wz-theme="dark"] .popup-pannel-trigger-class-FilterUR,
+			[wz-theme="dark"] .popup-pannel-contents-closed-class-FilterUR,
+			[wz-theme="dark"] .popup-pannel-contents-open-class-FilterUR,
+			[wz-theme="dark"] .popup-pannel-trigger-class-FilterMP,
+			[wz-theme="dark"] .popup-pannel-contents-closed-class-FilterM,
+			[wz-theme="dark"] .popup-pannel-contents-open-class-FilterMP,
+			[wz-theme="dark"] .popup-pannel-trigger-class-FilterMC,
+			[wz-theme="dark"] .popup-pannel-contents-closed-class-FilterMC,
+			[wz-theme="dark"] .popup-pannel-contents-open-class-FilterMC,
+			[wz-theme="dark"] .popup-pannel-trigger-class-FilterPUR,
+			[wz-theme="dark"] .popup-pannel-contents-closed-class-FilterPUR,
+			[wz-theme="dark"] .popup-pannel-contents-open-class-FilterPUR {
+				color: black !important;
+			}
 
-   /* WME Advanced Closures - Plugin */
-   .wmeac-closuredialog, .wmeac-closuredialog h1, #wmeac-csv-closures-log:before, #wmeac-csv-closures-preview:before {
-    background-color: var(--background_default) !important;
-   }
-   .wmeac-closuredialog,
-   .wmeac-tab-pane,
-   .wmeac-nav-tabs>li>a,
-   .wmeac-nav-tabs>li:not(.active)>a,
-   #wmeac-csv-closures-preview,
-   #wmeac-csv-closures-log {
-   border: 1px solid black !important;
-   }
-   .wmeac-nav-tabs>li:not(.active)>a {
-   background-color: var(--always_dark_inactive) !important;
-   }
-   .wmeac-closuredialog button {
-   background-color: var(--always_dark_inactive) !important;
-   }
+			[wz-theme="dark"] .urt-table {
+				color: var(--content_p1);
+			}
 
-   /* URO+ Plugin */
-   .uroAlerts * {
-    background-color: var(--background_default) !important;
-   }
-   #_tabURs, #_tabMPs, #_tabMCs, #_tabRTCs, #_tabRAs, #_tabPlaces, #_tabMisc, #uroDiv{
-   background-color: var(--background_default) !important;
-   }
-   #uroCommentCount > div {
-   color: black !important;
-   filter: invert(1);
-   }
-   #uroDiv {
-   box-shadow: 5px 5px 10px black !important;
-   }
+			[wz-theme="dark"] .urt-table thead,
+			[wz-theme="dark"] .urt-table thead a,
+			[wz-theme="dark"] .urt-table thead a:hover {
+				color: black !important;
+			}
+
+			[wz-theme="dark"] .urt-bg-highlighted,
+			[wz-theme="dark"] .urt-bg-highlighted a,
+			[wz-theme="dark"] .urt-bg-highlighted a:hover {
+				color: black !important;
+			}
+
+			[wz-theme="dark"] .urt-bg-ifollow {
+				color: var(--content_p1);
+				background-color: var(--always_dark_inactive) !important;
+			}
+
+			[wz-theme="dark"] .urt-bg-selected,
+			[wz-theme="dark"] .urt-bg-selected a,
+			[wz-theme="dark"] .urt-bg-selected a:hover {
+				color: black !important;
+			}
+
+			[wz-theme="dark"] .urt-bg-newcomments {
+				color: black !important;
+			}
+
+			[wz-theme="dark"] #urt-a-export>img {
+				filter: invert(100%);
+			}
+
+			[wz-theme="dark"] #urt-a-export-csv>img {
+				filter: invert(100%);
+			}
+
+			[wz-theme="dark"] #urt-progressBarInfo {
+				color: black !important;
+			}
+
+	/* WME Advanced Closures - Plugin */
+			[wz-theme="dark"] .wmeac-closuredialog,
+			[wz-theme="dark"] .wmeac-closuredialog h1,
+			[wz-theme="dark"] #wmeac-csv-closures-log:before,
+			[wz-theme="dark"] #wmeac-csv-closures-preview:before {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] .wmeac-closuredialog,
+			[wz-theme="dark"] .wmeac-tab-pane,
+			[wz-theme="dark"] .wmeac-nav-tabs>li>a,
+			[wz-theme="dark"] .wmeac-nav-tabs>li:not(.active)>a,
+			[wz-theme="dark"] #wmeac-csv-closures-preview,
+			[wz-theme="dark"] #wmeac-csv-closures-log {
+				border: 1px solid black !important;
+			}
+
+			[wz-theme="dark"] .wmeac-nav-tabs>li:not(.active)>a {
+				background-color: var(--always_dark_inactive) !important;
+			}
+
+			[wz-theme="dark"] .wmeac-closuredialog button {
+				background-color: var(--always_dark_inactive) !important;
+			}
+
+	/* URO+ Plugin */
+			[wz-theme="dark"] .uroAlerts * {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] #_tabURs,
+			[wz-theme="dark"] #_tabMPs,
+			[wz-theme="dark"] #_tabMCs,
+			[wz-theme="dark"] #_tabRTCs,
+			[wz-theme="dark"] #_tabRAs,
+			[wz-theme="dark"] #_tabPlaces,
+			[wz-theme="dark"] #_tabMisc,
+			[wz-theme="dark"] #uroDiv {
+				background-color: var(--background_default) !important;
+			}
+			
+			[wz-theme="dark"] #uroCommentCount>div {
+				color: black !important;
+				filter: invert(1);
+			}
+
+			[wz-theme="dark"] #uroDiv {
+				box-shadow: 5px 5px 10px black !important;
+			}
 
    /* DOT Advisories Plugin */
-   #gmPopupContainer {
-   background-color: var(--background_default) !important;
-   }
-
+			[wz-theme="dark"] #gmPopupContainer {
+				background-color: var(--background_default) !important;
+			}
+			
    /* Waze Edit Count Monitor Plugin*/
-   .secondary-toolbar .toolbar-button {
-   background-color: var(--background_default) !important;
-   }
-   #wecm-count {
-   color: var(--content_p1) !important;
-   }
+			[wz-theme="dark"] .secondary-toolbar .toolbar-button {
+				background-color: var(--background_default) !important;
+			}
+			
+			[wz-theme="dark"] #wecm-count {
+				color: var(--content_p1) !important;
+			}
 
     /* External Provider buttons */
-	.external-provider-action {
-	--wz-button-background-color: var(--always_dark_surface_default);
-	}
-	
+			[wz-theme="dark"] .external-provider-action {
+				--wz-button-background-color: var(--always_dark_surface_default);
+			}
+				
 	/*Place alternative name delete icon*/
-	.aliases .alias-item-actions {
-	--wz-button-background-color: var(--always_dark_surface_default);
-	}
+			[wz-theme="dark"] .aliases .alias-item-actions {
+				--wz-button-background-color: var(--always_dark_surface_default);
+			}
 
 	/*Lanes and road width*/
-	.direction-lanes .lane-instruction .drawing .letter-circle {
-	background-color: var(--background_default) !important;
-	}	
-	
+			[wz-theme="dark"] .direction-lanes .lane-instruction .drawing .letter-circle {
+				background-color: var(--background_default) !important;
+			}
 	
 	/*WME Segment city tool*/
-	#wmesct-container .ts-control, .ts-control input, .ts-dropdown {
-	color: var(--content_p1) !important;
-	}
-	#wmesct-container .ts-dropdown {
+			[wz-theme="dark"] #wmesct-container .ts-control,
+			[wz-theme="dark"] .ts-control input,
+			[wz-theme="dark"] .ts-dropdown {
+				color: var(--content_p1) !important;
+			}
+			
+			[wz-theme="dark"] #wmesct-container .ts-dropdown {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] .wmesct-clear-cities-button,
+			[wz-theme="dark"] .waze-btn.waze-btn-green {
+				background-color: var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] #wmesct-container .ts-dropdown .option.active {
+				background-color: black !important;
+			}
+			
+	/*********** WME FUME *************************************/
+	[wz-theme="dark"] .yslider-stops,
+	[wz-theme="dark"] .olButton,
+	[wz-theme="dark"] .olControlPanZoomBar,
+	[wz-theme="dark"] .slider {
 	background-color: var(--background_default) !important;
-	}
-    .wmesct-clear-cities-button, .waze-btn.waze-btn-green {
-	background-color: var(--always_dark_surface_default) !important;
-	}
-	#wmesct-container .ts-dropdown .option.active {
-	background-color: black !important;
 	}
 	
-	/*********** WME FUME *************************************/
-	.yslider-stops, .olButton, .olControlPanZoomBar, .slider {
-	background-color: var(--background_default) !important;
-	}
     /* I am not 100% positive this was the FUME update box */
-    #abAlerts {
-    box-shadow: black 5px 5px 10px !important;
-    border-color: black !important;
-    }
-    #abAlerts, #abAlerts #header, #abAlerts #content {
-    background-color: var(--background_default) !important;
-    }
-    /* For some reason background variant does not work at
-    this point. Hardcode color for now. */
-    #abAlertTickBtn {
-    background-color: #3c4043 !important;
-    }
+			[wz-theme="dark"] #abAlerts {
+				box-shadow: black 5px 5px 10px !important;
+				border-color: black !important;
+			}
+			
+			[wz-theme="dark"] #abAlerts,
+			[wz-theme="dark"] #abAlerts #header,
+			[wz-theme="dark"] #abAlerts #content {
+				background-color: var(--background_default) !important;
+			}
+			
+    /* For some reason background variant does not work at this point. Hardcode color for now. */
+			[wz-theme="dark"] #abAlertTickBtn {
+				background-color: #3c4043 !important;
+			}
 	
 	/*RA Util window*/
-	#RAUtilWindow, #SSUtilWindow {
-	background-color: var(--background_default) !important;
-	}
-	#rotationAmount, #shiftAmount {
-	color: white !important;
-    }
-	
+			[wz-theme="dark"] #RAUtilWindow,
+			[wz-theme="dark"] #SSUtilWindow {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] #rotationAmount,
+			[wz-theme="dark"] #shiftAmount {
+				color: white !important;
+			}
+			
 /******E50 Geometry information Script ********************************************/
-    .e50 fieldset legend, .e50 li a:hover, .e50 li a.noaddress:hover {
-    background-color: var(--always_dark_surface_default) !important;
-    }
-    .wme-ui-panel-container, .wme-ui-close-panel, .e50 li a.noaddress, .e50 .wme-ui-body  {
-    background-color: var(--background_default) !important;
-    }
-    .wme-ui-close-panel:after {
-    filter: invert(1.0);
-    }
-    legend {
-    color: var(--content_p1) !important;
-     }
-    .controls-container.e50 input {
+			[wz-theme="dark"] .e50 fieldset legend,
+			[wz-theme="dark"] .e50 li a:hover,
+			[wz-theme="dark"] .e50 li a.noaddress:hover {
+				background-color: var(--always_dark_surface_default) !important;
+			}
+			
+			[wz-theme="dark"] .wme-ui-panel-container,
+			[wz-theme="dark"] .wme-ui-close-panel,
+			[wz-theme="dark"] .e50 li a.noaddress,
+			[wz-theme="dark"] .e50 .wme-ui-body {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] .wme-ui-close-panel:after {
+				filter: invert(1.0);
+			}
+
+			[wz-theme="dark"] legend {
+				color: var(--content_p1) !important;
+			}
+			
+    [wz-theme="dark"] .controls-container.e50 input {
     color: var(--content_p2) !important;  /*color overrided*/
     }
 	
 /**********************Address Point Helper*****************************/
-	.waze-btn.waze-btn-white {
-	background-color: var(--background_default) !important;
-	}
+			[wz-theme="dark"] .waze-btn.waze-btn-white {
+				background-color: var(--background_default) !important;
+			}
 
-	#edit-panel .control-label, .edit-panel .control-label {
-	color: var(--content_p1) !important;
-    }
+			[wz-theme="dark"] #edit-panel .control-label,
+			[wz-theme="dark"] .edit-panel .control-label {
+				color: var(--content_p1) !important;
+			}
 
-    /* WME OpenData Plugin */
-    #oslDragBar {
-    background-color: var(--background_default) !important;
-    box-shadow: black 5px 5px 10px !important;
-    }
-    #oslWindow {
-    box-shadow: black 5px 5px 10px !important;
-    border: 1px solid black !important
-    }
-    #oslOSLDiv {
-    background-color: var(--always_dark_surface_default) !important;
-    }
-    #oslSelect {
-    background-color: var(--background_default) !important;
-    }
-    #oslSegGeoUIDiv {
-    background-color: var(--background_default) !important;
-    }
-    #oslGazTagsDiv {
-    background-color: var(--always_dark_surface_default) !important;
-    }
-    #oslNCDiv {
-    background-color: var(--background_default) !important;
-    }
-    #oslMLCDiv {
-    background-color: var(--always_dark_surface_default) !important;
-    }	
-	
+			/* WME OpenData Plugin */
+			[wz-theme="dark"] #oslDragBar {
+				background-color: var(--background_default) !important;
+				box-shadow: black 5px 5px 10px !important;
+			}
+
+			[wz-theme="dark"] #oslWindow {
+				box-shadow: black 5px 5px 10px !important;
+				border: 1px solid black !important
+			}
+
+			[wz-theme="dark"] #oslOSLDiv {
+				background-color: var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] #oslSelect {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] #oslSegGeoUIDiv {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] #oslGazTagsDiv {
+				background-color: var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] #oslNCDiv {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] #oslMLCDiv {
+				background-color: var(--always_dark_surface_default) !important;
+			}
+			
 /**********************WME Geometries************************************/
-	.geometries-cb-label {
-    color: var(--content_p1) !important;
-    }
+			[wz-theme="dark"] .geometries-cb-label {
+				color: var(--content_p1) !important;
+			}
 	
 /***********************WME Route Checker*******************************/
-	#routeTest > p > b {
-    color: white !important;
-}	
+			[wz-theme="dark"] #routeTest>p>b {
+				color: white !important;
+			}
+			
 /*Show routes between these 2 segments*/
-	a#goroutes {color: var(--content_p1) !important;} 
-	
-	#routeTest a.step:hover {
-    background-color: var(--always_dark_surface_default) !important;
-	}
-	
-	#routeTest p.route {
-    background-color: var(--background_default) !important;
-    }
-/*for generated road segments name via route checker*/
-    a.step span {
-    color: white !important;
-    }
+			[wz-theme="dark"] a#goroutes {
+				color: var(--content_p1) !important;
+			}
+			
+			[wz-theme="dark"] #routeTest a.step:hover {
+				background-color: var(--always_dark_surface_default) !important;
+			}
 
-/*Route step by step direction*/	
-	#routeTest a.step {
-    color: var(--content_p1) !important;
-    }
+			[wz-theme="dark"] #routeTest p.route {
+				background-color: var(--background_default) !important;
+			}
+
+			/*for generated road segments name via route checker*/
+			[wz-theme="dark"] a.step span {
+				color: white !important;
+			}
+
+			/*Route step by step direction*/
+			[wz-theme="dark"] #routeTest a.step {
+				color: var(--content_p1) !important;
+			}
 	
 /******************* WME Validator *************************************/
-	c2821834349 > input:disabled + label, .c2821834349 > input:disabled + label {
-	color: var(--content_p1) !important;
-	}
-	.c3584528711 > span, .c2952996808, .c2821834349 > input:checked + label {
-    background-color: var(--background_default) !important;
-    }
-	.c3336571891 > span {
-    background-color: var(--always_dark_surface_default) !important;
-    }
-	.c2821834349 > label {
-    background-color: var(--always_dark_surface_default) !important;
-    }
-	.c3210313671 > button:disabled {
-	background-color: var(--always_dark_surface_default) !important;
-	}
-	
+			[wz-theme="dark"] c2821834349>input:disabled+label,
+			[wz-theme="dark"] .c2821834349>input:disabled+label {
+				color: var(--content_p1) !important;
+			}
+
+			[wz-theme="dark"] .c3584528711>span,
+			[wz-theme="dark"] .c2952996808,
+			[wz-theme="dark"] .c2821834349>input:checked+label {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] .c3336571891>span {
+				background-color: var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] .c2821834349>label {
+				background-color: var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] .c3210313671>button:disabled {
+				background-color: var(--always_dark_surface_default) !important;
+			}
+			
 /***** Re-lock Segments & POI***********************************************/	
-	.tg .tg-header {
-	background-color: var(--always_dark_surface_default) !important;
-	}
+			[wz-theme="dark"] .tg .tg-header {
+				background-color: var(--always_dark_surface_default) !important;
+			}
 	
 /***** WME Locksmith *****************************************************/ 
-    .ls-Wrapper {
-	background-color: var(--background_default) !important;
-	}
+			[wz-theme="dark"] .ls-Wrapper {
+				background-color: var(--background_default) !important;
+			}
 
-	.ls-Options-Dropdown-Menu {
-	background-color: var(--always_dark_surface_default) !important;
-	}
-	
-	.ls-Options-Dropdown-Menu li:hover, .ls-Options-Menu:hover  {
-	background-color: var(--always_dark_inactive) !important;
-    border: var(--always_dark_surface_default) !important;
-    }
- 
-    .ls-Button {
-	background-color: var(--always_dark_surface_default) !important;
-	}
-	
-	label.ls-Attr-Label {
-    color: black;
-    }
-	a#lsConnectionStatus {
-    background-color: var(--always_dark_inactive) !important;
-	}
-	
+			[wz-theme="dark"] .ls-Options-Dropdown-Menu {
+				background-color: var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] .ls-Options-Dropdown-Menu li:hover,
+			[wz-theme="dark"] .ls-Options-Menu:hover {
+				background-color: var(--always_dark_inactive) !important;
+				border: var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] .ls-Button {
+				background-color: var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] label.ls-Attr-Label {
+				color: black;
+			}
+
+			[wz-theme="dark"] a#lsConnectionStatus {
+				background-color: var(--always_dark_inactive) !important;
+			}
 /**** Wide Area Lens ******************************************************/	
-    .btn.btn-primary {
-	background-color: var(--always_dark_surface_default) !important;
-	}
+			[wz-theme="dark"] .btn.btn-primary {
+				background-color: var(--always_dark_surface_default) !important;
+			}
+
 
 /**** Closure helper ******************************************************/
-    .wmech_closurebutton.wmech_presetdeletebutton, button#wmechButton1.wmech_closurebutton {
+    [wz-theme="dark"] .wmech_closurebutton.wmech_presetdeletebutton,
+	[wz-theme="dark"] button#wmechButton1.wmech_closurebutton {
 	background-color: var(--always_dark_surface_default) !important;
 	}
-	.wmech_closurebutton.wmech_presetsavebutton {
-	background-color: var(--background_default) !important;
-    }
-	.wmech-alert {
-	background-color: var(--always_dark_surface_default) !important;
-    }
-	.nav-tabs>li>a:hover {
-	background-color: var(--always_dark_inactive) !important;
-	}
-	#wmech_mteradiosdiv {
-	background-color: var(--always_dark_surface_default) !important;
-    }
-    div[id^="wmech_presetrow"] input[type="text"], #wmech-settings-boxes input, #wmech-settings-boxes #wmech_settingcustomcs {
-    color: var(--content_p2) !important;
-    }
-	#uroAlerts, #content {
-	background-color: var(--background_default) !important;
-    }
+			[wz-theme="dark"] .wmech_closurebutton.wmech_presetsavebutton {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] .wmech-alert {
+				background-color: var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] .nav-tabs>li>a:hover {
+				background-color: var(--always_dark_inactive) !important;
+			}
+
+			[wz-theme="dark"] #wmech_mteradiosdiv {
+				background-color: var(--always_dark_surface_default) !important;
+			}
+			
+			[wz-theme="dark"] div[id^="wmech_presetrow"] input[type="text"],
+			[wz-theme="dark"] #wmech-settings-boxes input,
+			[wz-theme="dark"] #wmech-settings-boxes #wmech_settingcustomcs {
+				color: var(--content_p2) !important;
+			}
+			
+			[wz-theme="dark"] #uroAlerts,
+			[wz-theme="dark"] #content {
+				background-color: var(--background_default) !important;
+			}
 
 /****** Place Interface Enhancement PIE **************************************/
-    #divPlaceFilter #piePlaceFilter, #divPlaceNamesFontCustomization input {
+    [wz-theme="dark"] #divPlaceFilter #piePlaceFilter,
+	[wz-theme="dark"] #divPlaceNamesFontCustomization input {
     color: var(--content_p1) !important; /* overrided */
     } 
 
 /****** Open Other Maps OOM **************************************/
-    fieldset #txtOOMLanguage, #txtOOMMyMapLink {
+    [wz-theme="dark"] fieldset #txtOOMLanguage,
+	[wz-theme="dark"] #txtOOMMyMapLink {
     color: var(--content_p2) !important; /* Overrided */
     } 
 
 /*********** EVCS Icons *************************************************/  
-    wz-image-chip img {
-    filter: invert(100%);
-    }
+			[wz-theme="dark"] wz-image-chip img {
+				filter: invert(100%);
+			}
 	
 /*********** WME Wazebar ***********************************************/
-	#WazeBarSettings, .flex-column, #Wazebar {
-	background-color: var(--background_default) !important;
-	color: var(--content_p2) !important;
-    }
-	#WazeBarAddCustomLink {
-   	background-color: var(--always_dark_surface_default) !important; /*its add button*/
-    }
-	#WazeBarSettings label, .WazeBarText {
-	color: var(--content_p2) !important;
-	}
-	#WazeBarSettings input[type='number'], #WazeBarSettings input[type='text'], #WazeBarSettings textarea, #colorPickerForumFont, #colorPickerWikiFont {
-	background-color: var(--background_default) !important;
-	border: 1px solid var(--always_dark_surface_default) !important;
-	}
-	.styled-select, .state-header {
-    background: var(--always_dark_inactive) !important;
-	}
-	#WazeBarFavorites {
-    background: var(--always_dark_inactive) !important;
-	}
-	.favorite-item, .favorite-item a {
-    background: var(--always_dark_surface_default) !important;
-	color: var(--content_p2) !important;
-    }
-	#WazeBarFavoritesAddContainer input {
-	background-color: var(--background_default) !important;
-	}
-	#WazeBarAddFavorite {
-   	background-color: var(--always_dark_surface_default) !important; /*its add button*/
-	border: 2px solid var(--always_dark_inactive) !important;
-    }
-	#WazeBarAddFavorite:hover {
-	color: var(--content_p1) !important;
-	background-color: var(--background_default) !important;
-	border-color: var(--always_dark_surface_default) !important;	
-	}
-	#WazeBarAddCustomLink:hover {
-	color: var(--content_p1) !important;
-	background-color: var(--always_dark_inactive) !important;
-	border-color: var(--always_dark_surface_default) !important;	
-	}
-	.favorite-item i, .custom-item i {
-	color: var(--content_p1) !important; /*red close icon*/
-	}
-	.custom-item, .custom-item a  {
-    background: var(--always_dark_inactive) !important;
-	color: var(--content_p2) !important;
-	}
-   	`
+			[wz-theme="dark"] #WazeBarSettings,
+			[wz-theme="dark"] .flex-column,
+			[wz-theme="dark"] #Wazebar {
+				background-color: var(--background_default) !important;
+				color: var(--content_p2) !important;
+			}
+			
+			[wz-theme="dark"] #WazeBarAddCustomLink {
+				background-color: var(--always_dark_surface_default) !important;
+				/*its add button*/
+			}
+			
+			[wz-theme="dark"] #WazeBarSettings label,
+			[wz-theme="dark"] .WazeBarText {
+				color: var(--content_p2) !important;
+			}
+
+			[wz-theme="dark"] #WazeBarSettings input[type='number'],
+			[wz-theme="dark"] #WazeBarSettings input[type='text'],
+			[wz-theme="dark"] #WazeBarSettings textarea,
+			[wz-theme="dark"] #colorPickerForumFont,
+			[wz-theme="dark"] #colorPickerWikiFont {
+				background-color: var(--background_default) !important;
+				border: 1px solid var(--always_dark_surface_default) !important;
+			}
+			
+			[wz-theme="dark"] .styled-select,
+			[wz-theme="dark"] .state-header {
+				background: var(--always_dark_inactive) !important;
+			}
+
+			[wz-theme="dark"] #WazeBarFavorites {
+				background: var(--always_dark_inactive) !important;
+			}
+
+			[wz-theme="dark"] .favorite-item,
+			[wz-theme="dark"] .favorite-item a {
+				background: var(--always_dark_surface_default) !important;
+				color: var(--content_p2) !important;
+			}
+
+			[wz-theme="dark"] #WazeBarFavoritesAddContainer input {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] #WazeBarAddFavorite {
+				background-color: var(--always_dark_surface_default) !important;
+				/*its add button*/
+				border: 2px solid var(--always_dark_inactive) !important;
+			}
+
+			[wz-theme="dark"] #WazeBarAddFavorite:hover {
+				color: var(--content_p1) !important;
+				background-color: var(--background_default) !important;
+				border-color: var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] #WazeBarAddCustomLink:hover {
+				color: var(--content_p1) !important;
+				background-color: var(--always_dark_inactive) !important;
+				border-color: var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] .favorite-item i,
+			[wz-theme="dark"] .custom-item i {
+				color: var(--content_p1) !important;
+				/*red close icon*/
+			}
+
+			[wz-theme="dark"] .custom-item,
+			[wz-theme="dark"] .custom-item a {
+				background: var(--always_dark_inactive) !important;
+				color: var(--content_p2) !important;
+			}
+
+            [wz-theme="dark"] #editing-activity .mercury-bg {
+                background-color: #ff8383;
+                opacity: .03;
+            }
+
+            [wz-theme="dark"] .wz-chat-header-btn {
+                filter: invert(1);
+            }
+
+            [wz-theme="dark"] .wz-chat-header-btn .icon:hover {
+                /* This is being inverted for the chat bubble. We want black,
+                   so we say white */
+                background-color: white !important;
+            }`;
+
+    // This CSS block cannot be part of the 'theme' because the base pallete
+    // does not exist inside the element we are modifying it, and it seems
+    // overkil to add it for one element.
     const UR_text_area = `
-    .wz-textarea .wz-textarea-inner-container textarea {
-    background-color: white;
-    color: black !important;
-    filter: invert(1.0);
-    border-color: white !important;
-    }
-    `
+			.wz-textarea .wz-textarea-inner-container textarea {
+				background-color: white;
+				color: black !important;
+				filter: invert(1.0);
+				border-color: white !important;
+			}`;
 
-    const getStoredTheme = () => localStorage.getItem('wz-theme')
-    const setStoredTheme = theme => localStorage.setItem('wz-theme', theme)
-
-    const getPreferredTheme = () => {
-        const storedTheme = getStoredTheme()
-        if (storedTheme) {
-            return storedTheme
+    function setTheme(theme) {
+        if (theme == 'auto') {
+            document.documentElement.setAttribute('wz-theme', (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+        } else {
+            document.documentElement.setAttribute('wz-theme', theme);
         }
-
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
     }
 
-    let styleElement;
+    function changeToLight() {
+        setPreferredTheme('light');
+    }
+    function changeToDark() {
+        setPreferredTheme('dark');
+    }
 
-    let lightButton;
-    let darkButton;
+    function toggleTheme(event) {
+        let theme = event.target.checked ? 'dark' : 'light';
+
+        setPreferredTheme(theme);
+
+        // The local storage listener will do the actual theme change.
+        // We do not need to call setTheme(...) ecplicitly here.
+    }
 
     // Function to inject styles into the page
-    // If called for the first time, it create an element to inject
-    // it into.
-    function injectStyle(style) {
-        if (!styleElement) {
-            // If styleElement does not exist, create a new one
-            styleElement = document.createElement('style');
-            styleElement.type = 'text/css';
-            document.head.appendChild(styleElement);
+    function injectStyle() {
+        let styleElement = document.createElement('style');
+        styleElement.innerHTML = cssModifications;
+        document.head.appendChild(styleElement);
+    }
+
+    function addProfileToggle() {
+        let firstUserMenuItem = document.querySelector('wz-menu-item');
+
+        if (!firstUserMenuItem && profileTries <= maxUIRetries) {
+            setTimeout(() => addProfileToggle(), 1000);
+            profileTries++;
+            return;
+        } else if (!firstUserMenuItem && profileTries > maxUIRetries) {
+            console.log('wz-menu-item not found.');
+            profileTries = 0;
+            return;
         }
 
-        if (style == 'light') {
-            // Update the style element's content with the new styles
-            styleElement.innerHTML = lightCSSBase;
-        } else {
-            // Update the style element's content with the new styles
-            styleElement.innerHTML = darkCSSBase + cssModifications;
+        let userMenu          = firstUserMenuItem.parentNode;
+        let darkModeMenuItem  = document.createElement('wz-menu-item');
+
+        darkModeMenuItem.style     = 'pointer-events: none; border-bottom: 1px solid var(--separator_default, #e8eaed);';
+        darkModeMenuItem.innerHTML = `<wz-toggle-switch style="pointer-events: all;" checked="${getPreferredTheme() == 'dark'}" tabindex="0" name="wmeDarkMode" id="wme-dark-mode_switch">Dark Mode<input type="checkbox" name="wmeDarkMode" value="" style="display: none; visibility: hidden;"></wz-toggle-switch>`;
+
+        userMenu.insertBefore(darkModeMenuItem, firstUserMenuItem);
+
+        let darkModeSwitch = document.getElementById('wme-dark-mode_switch');
+
+        darkModeSwitch.addEventListener('change', toggleTheme);
+    }
+
+    function addSettingsToggle() {
+        let settingsDiv = document.querySelector('.settings');
+
+        if (!settingsDiv && settingsTries <= maxUIRetries) {
+            setTimeout(() => addSettingsToggle(), 1000);
+            settingsTries++;
+            return;
+        } else if (!settingsDiv && settingsTries > maxUIRetries) {
+            console.log('Settings div with class "settings" not found.');
+            settingsTries = 0;
+            return;
         }
-    }
 
-    // Define the callback function
-    function changeToDark() {
-        lightButton.value = "false";
-        lightButton.color = "secondary";
-        darkButton.value = "true";
-        darkButton.color = "primary";
-        setStoredTheme('dark');
-        injectStyle('dark');
-    }
-    function changeToLight() {
-        lightButton.value = "true";
-        lightButton.color = "primary";
-        darkButton.value = "false";
-        darkButton.color = "secondary";
-        setStoredTheme('light');
-        injectStyle('light');
-    }
+        const formDiv = settingsDiv.querySelector('.settings__form');
 
-    function addThemeToggleButton(style) {
-        const observer = new MutationObserver((mutationsList, observer) => {
-            const settingsDiv = document.querySelector('.settings');
-            if (settingsDiv) {
-                const formDiv = settingsDiv.querySelector('.settings__form');
-                if (formDiv) {
-                    const newDiv = document.createElement('div');
-                    newDiv.classList.add('settings__form-group', 'dark-mode');
-    
-                    const modeSelectionHTML = `
-                    <div class="theme-select">
-                        <wz-label class="themes-select__label" html-for="">
-                            Color Theme
-                        </wz-label>
-                        <wz-button id="button_light_theme" color="primary" size="sm" value="true">
-                            Light
-                        </wz-button>
-                        <wz-button id="button_dark_theme" color="secondary" size="sm" value="false">
-                            Dark
-                        </wz-button>
-                    </div>
-                    `;
-    
-                    newDiv.innerHTML = modeSelectionHTML;
-                    formDiv.appendChild(newDiv);
-    
-                    // Attach event listeners
-                    lightButton = document.getElementById('button_light_theme');
-                    darkButton = document.getElementById('button_dark_theme');
-    
-                    if (getPreferredTheme() == "dark") {
-                        changeToDark();
-                    }
-    
-                    lightButton.addEventListener('click', changeToLight);
-                    darkButton.addEventListener('click', changeToDark);
-    
-                    // Stop observing once the button is added
-                    observer.disconnect();
-                }
+        if (formDiv) {
+            const newDiv = document.createElement('div');
+            newDiv.classList.add('settings__form-group', 'dark-mode');
+
+
+            const modeSelectionHTML = `
+                <div class="theme-select">
+                    <wz-label class="themes-select__label" html-for="">
+                        Color Theme
+                    </wz-label>
+                    <wz-button id="button_light_theme" color="primary" size="sm" value="">
+                        Light
+                    </wz-button>
+                    <wz-button id="button_dark_theme" color="secondary" size="sm" value="">
+                        Dark
+                    </wz-button>
+                </div>
+                `;
+
+            newDiv.innerHTML = modeSelectionHTML;
+
+            formDiv.appendChild(newDiv);
+
+            // Get the wz-button by its ID
+            let lightButton = document.getElementById('button_light_theme');
+            let darkButton = document.getElementById('button_dark_theme');
+
+            console.log(darkButton);
+			
+            lightButton.addEventListener('click', changeToLight);
+            darkButton.addEventListener('click', changeToDark);
+
+            if (getPreferredTheme() == 'dark') {
+                lightButton.value = "false";
+                darkButton.value  = "true";
+
+                lightButton.color = "secondary";
+                darkButton.color  = "primary";
+            } else {
+                lightButton.value = "true";
+                darkButton.value  = "false";
+
+                lightButton.color = "primary";
+                darkButton.color  = "secondary";
             }
-        });
-    
-        // Observe the document for changes
-        observer.observe(document.body, { childList: true, subtree: true });
+
+        } else {
+            console.log('Form div with class "settings__form" not found.');
+        }
     }
-    
-    // Call the function after WME is initialized
-    document.addEventListener("wme-initialized", () => addThemeToggleButton(), { once: true });
+		   
+    function addThemeToggleButtons() {
+        addProfileToggle();
+        addSettingsToggle();
+    }
+ 
+    // We might not have the buttons loaded at this point.
+    // Inject the styles directly. The code that creates the
+    // Buttons will recall the correct change function which
+    // will highlight the correct button.
 
-    if(getPreferredTheme() == 'dark') {
-        // We might not have the buttons loaded at this point.
-        // Inject the styles directly. The code that creates the
-        // Buttons will recall the correct change function which
-        // will highlight the correct button.
-        injectStyle('dark');
+    // We do not need to inject the style for the chat or the
+    // login screen. These two are in iframes and implement
+    // dark mode already. We pick it up for free with the
+    // switching mechanism.
+
+    const chatRegex = new RegExp(".*://.*\.waze.com/chat.*");
+    const loginRegex = new RegExp(".*://.*\.waze\.com/.*signin.*");
+
+    if (!chatRegex.test(window.location.href) && !loginRegex.test(window.location.href)) {
+        injectStyle();
     }
 
+    setTheme(getPreferredTheme());
 
+    function FUMECheck() {
+        let FUMEuiContrast = document.getElementById('_inpUIContrast');
 
+        if (FUMEuiContrast && FUMEuiContrast.options[FUMEuiContrast.selectedIndex].text != "None") {
+            const fumeWarningMessage = `FUME UI Enhancements detected with contrast enhancements set to ` +
+                                        `${FUMEuiContrast.options[FUMEuiContrast.selectedIndex].text}. Please ` +
+                                        `set 'contrast enhancement' to 'none' to make WME Dark Mode work correctly.`;
+            // Use a long timeout to make sure the user acknowledges this message
+            // since it does break the plugin if not fixed.
+            WazeWrap.Alerts.info('Dark Mode - FUME UI Contrast Warning', fumeWarningMessage, false, false, 60000);
+        }
+    }
+
+    let initCalled = false;
+    async function init() {
+        if (!initCalled) {
+            initCalled = true;
+            addThemeToggleButtons();
+            setTimeout(() => FUMECheck(), 10000);
+
+            /* Bootstrap does not exist on the profile page */
+            const profileRegex = new RegExp(".*://.*\.waze\.com/.*user.*");
+            if (!profileRegex.test(window.location.href)) {
+                await bootstrap({ scriptUpdateMonitor: { downloadUrl } });
+            }
+        }
+    }
+
+    if (W?.userscripts?.state.isInitialized) {
+        init();
+    } else {
+        document.addEventListener('wme-initialized',
+                                  init(), {
+                                    once: true,
+                                  });
+        // Sometimes we load in without W, and we will never get a wme-initialized
+        // callback. In that case, we setup a timeout to call init anyway in a second.
+        // This currently impacts the profile page.
+        setTimeout(() => init(), 2000);
+    }
+	
     const observer = new MutationObserver((mutationsList, observer) => {
         for (let mutation of mutationsList) {
             if (mutation.type === 'childList') {
@@ -1281,9 +1576,9 @@ if (window.top === window.self) {
 
                                 // Change the background color
                                 if (style.includes('wz-tooltip-content-background-color')) {
-                                    style = style.replace(/wz-tooltip-content-background-color:[^;]*;/,
-                                                          'wz-tooltip-content-background-color: #202124;');
+                                    style = style.replace(/wz-tooltip-content-background-color:[^;]*;/, 'wz-tooltip-content-background-color: #202124;');
                                 }
+								
                                 // Change the box shadow to be a white outline
                                 if (style.includes('wz-tooltip-content-box-shadow')) {
                                     style = style.replace(/wz-tooltip-content-box-shadow:[^;]*;/,
@@ -1319,93 +1614,25 @@ if (window.top === window.self) {
     });
 
     // Configure the observer to watch for child nodes being added to the body (or any other element)
-    const config = { childList: true, subtree: true };
+    const config = {
+        childList: true,
+        subtree: true
+    };
 
     // Start observing the document or a specific container
     observer.observe(document.body, config);
-}
-else {
-    //We are in an iframe whcih will be the chat
-    GM.addStyle ( `
-    :root[wz-theme=light],:root[wz-theme=light] :host {
-    --alarming: #ff8f8f;
-    --alarming_variant: #ff8f8f;
-    --always_white: #fff;
-    --always_black: #000;
-    --always_dark: #202124;
-    --always_dark_background_default: #202124;
-    --always_dark_background_variant: #000;
-    --always_dark_content_default: #e8eaed;
-    --always_dark_content_p1: #d5d7db;
-    --always_dark_content_p2: #b7babf;
-    --always_dark_inactive: #55595e;
-    --always_dark_surface_default: #3c4043;
-    --background_default: #202124;
-    --background_modal: rgba(32,33,36,0.6);
-    --background_table_overlay: rgba(144,149,156,0.6);
-    --background_variant: #000;
-    --brand_carpool: #1ee592;
-    --brand_waze: #3cf;
-    --cautious: #fce354;
-    --cautious_variant: #ffc400;
-    --content_default: #e8eaed;
-    --content_p1: #d5d7db;
-    --content_p2: #b7babf;
-    --content_p3: #90959c;
-    --disabled_text: #72767d;
-    --hairline: #55595e;
-    --hairline_strong: #72767d;
-    --handle: #d5d7db;
-    --hint_text: #90959c;
-    --ink_elevation: #e8eaed;
-    --ink_on_primary: #fff;
-    --ink_on_primary_focused: hsla(0,0%,100%,0.12);
-    --ink_on_primary_hovered: hsla(0,0%,100%,0.04);
-    --ink_on_primary_pressed: hsla(0,0%,100%,0.1);
-    --leading_icon: #72767d;
-    --on_primary: #202124;
-    --primary: #3cf;
-    --primary_variant: #3cf;
-    --promotion_variant: #c088ff;
-    --report_chat: #1ee592;
-    --report_closure: #feb87f;
-    --report_crash: #d5d7db;
-    --report_gas: #1bab50;
-    --report_hazard: #ffc400;
-    --report_jam: #ff5252;
-    --report_place: #c088ff;
-    --report_police: #1ab3ff;
-    --safe: #1ee592;
-    --safe_variant: #1ee592;
-    --separator_default: #3c4043;
-    --shadow_default: #000;
-    --surface_alt: #18427c;
-    --surface_default: #3c4043;
-    --surface_variant: #3c4043;
-    --surface_variant_blue: #1a3950;
-    --surface_variant_green: #1f432f;
-    --surface_variant_yellow: #4d421d;
-    --surface_variant_orange: #4c342c;
-    --surface_variant_red: #46292c;
-    --surface_variant_purple: #3d285b;
-    background-color: var(--background_default);
-    color: var(--content_default);
-    color-scheme: dark
-    }
-    `);
-}
+
     function sandboxBootstrap() {
         if (WazeWrap?.Ready) {
 			wmeSDK = bootstrap({ scriptUpdateMonitor: { downloadUrl } });
             WazeWrap.Interface.ShowScriptUpdate(scriptName, scriptVersion, updateMessage);
-			
         } else {
             setTimeout(sandboxBootstrap, 250);
         }
     }
+	
     // Start the "sandboxed" code.
     sandboxBootstrap();
 	
     console.log(`${scriptName} initialized.`); 	
-	
 })();
