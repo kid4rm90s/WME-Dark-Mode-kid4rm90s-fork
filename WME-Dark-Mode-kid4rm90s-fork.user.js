@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.03
+// @version      1.04
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -121,6 +121,9 @@ Version
         - No edit colors on profile page
 1.03 - Added support for WME Edit Profile Enhancement
        Fixed -
+        - Various other bugs
+1.04 - Added support for WME Edit Profile Enhancement
+       Fixed -
         - Various other bugs		
 	
 */
@@ -133,7 +136,7 @@ Version
 
 (function main() {
   "use strict";
-  const updateMessage = 'Added \'Auto Theme\'<br>Fixed<br>- Profile Toggle Location.<br>- 0 count edit color.';
+  const updateMessage = 'Added \'Support for WME Edit Profile Enhancement\'<br>Fixed<br>- Various other bugs.<br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -1421,6 +1424,7 @@ Version
 				
 			[wz-theme="dark"] #wpeWKT {
 				background-color: var(--background_default) !important;
+				box-shadow: var(--always_dark_inactive) 5px 5px 10px 4px !important;				
 				}
 				
 			[wz-theme="dark"] #recent-edits .recent-edits-list .recent-edits-load-more {
