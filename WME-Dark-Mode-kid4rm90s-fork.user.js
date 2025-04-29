@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.04
+// @version      1.04.1
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -124,7 +124,8 @@ Version
         - Various other bugs
 1.04 - Added support for WME Edit Profile Enhancement
        Fixed -
-        - Various other bugs		
+        - Various other bugs
+		- Waze discuss welcome font fix	
 	
 */
 
@@ -1434,7 +1435,13 @@ Version
 			[wz-theme="dark"] .modal-content {
 				background-color: var(--background_default) !important; /*find more mentee dialogue box*/
 				border: 1px solid #999 !important;
-			}`;
+			}
+			
+/************************* Waze Discuss Header *****************************************************/			
+			[wz-theme="dark"] .category-title-header .category-title-name h1 {
+				color: #434343 !important;
+			}
+`;
 
     // This CSS block cannot be part of the 'theme' because the base pallete
     // does not exist inside the element we are modifying it, and it seems
