@@ -1439,7 +1439,7 @@ Version
 			
 /************************* Waze Discuss Header *****************************************************/			
 			[wz-theme="dark"] .category-title-header .category-title-name h1 {
-				color: #434343 !important;
+				color:rgb(0, 0, 0) !important;
 			}
 `;
 
