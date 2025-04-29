@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.0
+// @version      1.03
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -115,6 +115,13 @@ Version
        Enhanced ability to change dark/light mode. Made it sync across tabs/chat/profile/beta.
        Added a warning message to warn about FUME contrast enhancements being enabled.
 1.01 - Removed the match for Waze Discuss. Did this to change the Waze Bar
+1.02 - Added an auto theme mode which syncs with the system
+       Fixed -
+        - Profile toggle sometimes going to the wrong menu
+        - No edit colors on profile page
+1.03 - Added support for WME Edit Profile Enhancement
+       Fixed -
+        - Various other bugs		
 	
 */
 
@@ -126,11 +133,10 @@ Version
 
 (function main() {
   "use strict";
-  const updateMessage = 'Structural improvements to code.<br>Enhanced ability to toggle dark mode.<br>Made it sync across all affected tabs.<br>Added warning message about FUME contrast enhancements being enabled.<br>1.01 - Hot Fix to remove Waze Discuss match.';
+  const updateMessage = 'Added \'Auto Theme\'<br>Fixed<br>- Profile Toggle Location.<br>- 0 count edit color.';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
-    let wmeSDK;
 	let   profileTries   = 0;
 	let   settingsTries  = 0;
     // Currently it is 60 retries (seconds) since we can only add this after a user is
@@ -138,47 +144,88 @@ Version
     // so it should not bog anything down.
     let   maxUIRetries   = 60;
 
+    var lightButton;
+    var darkButton;
+    var autoButton;
+
+    var darkModeSwitch;	
+
+    function updateUI() {
+        const theme = getPreferredTheme();
+        let currAuto = window.matchMedia('(prefers-color-scheme: dark)').matches ? "Dark" : "Light";
+
+        // Let's make sure that the buttons were made.
+        // Since they are made together, we just check that
+        // one is not null
+        if (lightButton) {
+            lightButton.value = theme == 'light' ? "true" : "false";
+            darkButton.value  = theme == 'dark'  ? "true" : "false";
+            autoButton.value  = theme == 'auto'  ? "true" : "false";
+
+            lightButton.color = theme == 'light' ? "primary" : "secondary";
+            darkButton.color  = theme == 'dark'  ? "primary" : "secondary";
+            autoButton.color  = theme == 'auto'  ? "primary" : "secondary";
+
+            autoButton.textContent  = `Auto (${currAuto})`;
+        }
+
+        if (darkModeSwitch) {
+            // We want the toggle to toggle either dark or auto
+            // on or off. So if we are light themed, the text depends
+            // on the last theme.
+
+            // If last theme is dark, the toggle turns "Dark Theme" on/off
+            // If last theme is auto, the toggle turns "Auto Theme" on/off
+
+            if (theme == "auto" ||
+                (theme == "light" && getPreviousTheme() == "auto")) {
+                darkModeSwitch.textContent = `Auto Theme (${currAuto})`;
+            } else {
+                darkModeSwitch.textContent = "Dark Theme";
+            }
+
+            if (theme == "auto") {
+                // Auto always counts as true so that turning it 'off' will
+                // always go to light.
+                darkModeSwitch.checked = true;
+            } else {
+                darkModeSwitch.checked = theme == "dark" ? true : false;
+            }
+        }
+    }
+
+	function getPreviousTheme() {
+        return GM_getValue('wz-previous-theme', 'dark');
+	}
+
 	function getPreferredTheme() {
         return GM_getValue('wz-theme', 'dark');
 	}
 
     function setPreferredTheme(theme) {
-        GM_setValue('wz-theme', theme);
+        // We need to keep track of our last theme to use it in
+        // the text for the toggle located under the profile box
+        const currTheme = getPreferredTheme();
+
+        // Since we now keep track of the last theme, we only want
+        // to update the theme if it is different
+        if (theme != currTheme) {
+            GM_setValue('wz-previous-theme', currTheme);
+            GM_setValue('wz-theme', theme);
+        }
     }
-	
+
     GM_addValueChangeListener("wz-theme", function(key, oldValue, newValue, remote) {
-        let darkModeSwitch = document.getElementById('wme-dark-mode_switch');
+        updateUI();
+        setTheme();
+    });
 
-        // Since this could be triggered from an external tab, let's make sure this tab's
-        // switch is toggled to the correct state
-        if(darkModeSwitch) {
-            darkModeSwitch.checked = newValue == 'dark';
-        }
-
-        // Get the wz-button by its ID
-        let lightButton = document.getElementById('button_light_theme');
-        if (lightButton) {
-            if (getPreferredTheme() == 'dark') {
-                lightButton.value = "false";
-                lightButton.color = "secondary";
-            } else {
-                lightButton.value = "true";
-                lightButton.color = "primary";
-            }
-        }
-
-        let darkButton = document.getElementById('button_dark_theme');
-        if (darkButton) {
-            if (getPreferredTheme() == 'dark') {
-                darkButton.value = "true";
-                darkButton.color = "primary";
-            } else {
-                darkButton.value = "false";
-                darkButton.color = "secondary";
-            }
-        }
-
-        setTheme(newValue);
+    // Detect changes in the system theme.
+    // We always need to update the UI to change the text in ()s - Auto Mode ([mode])
+    // Calling setTheme even if there is no need to change is fine
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+        updateUI();
+        setTheme();
     });	
 
     // We are not in an iframe
@@ -449,6 +496,7 @@ Version
 				--wz-button-background-color: var(--always_dark_surface_default);
 				--wz-button-border: var(--always_dark_surface_default);
 			}
+
 	/* WME Switch Uturns */
 			[wz-theme="dark"] .disallow-connections,
 			[wz-theme="dark"] .allow-connections {
@@ -1215,17 +1263,18 @@ Version
 			[wz-theme="dark"] a#lsConnectionStatus {
 				background-color: var(--always_dark_inactive) !important;
 			}
+
 /**** Wide Area Lens ******************************************************/	
 			[wz-theme="dark"] .btn.btn-primary {
 				background-color: var(--always_dark_surface_default) !important;
 			}
-
 
 /**** Closure helper ******************************************************/
     [wz-theme="dark"] .wmech_closurebutton.wmech_presetdeletebutton,
 	[wz-theme="dark"] button#wmechButton1.wmech_closurebutton {
 	background-color: var(--always_dark_surface_default) !important;
 	}
+	
 			[wz-theme="dark"] .wmech_closurebutton.wmech_presetsavebutton {
 				background-color: var(--background_default) !important;
 			}
@@ -1347,7 +1396,6 @@ Version
 			}
 
             [wz-theme="dark"] #editing-activity .mercury-bg {
-                background-color: #ff8383;
                 opacity: .03;
             }
 
@@ -1359,7 +1407,30 @@ Version
                 /* This is being inverted for the chat bubble. We want black,
                    so we say white */
                 background-color: white !important;
-            }`;
+            }
+			
+/************************ Waze Editor Profile Enhancement *****************************************/			
+			[wz-theme="dark"] .nav-tabs>li.active>a {
+			background-color: var(--always_dark_inactive) !important;
+			color: var(--content_p1) !important;
+			}
+			
+			[wz-theme="dark"] .s-button.s-button--mercury {
+				background-color: var(--always_dark_surface_default);
+				}
+				
+			[wz-theme="dark"] #wpeWKT {
+				background-color: var(--background_default) !important;
+				}
+				
+			[wz-theme="dark"] #recent-edits .recent-edits-list .recent-edits-load-more {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] .modal-content {
+				background-color: var(--background_default) !important; /*find more mentee dialogue box*/
+				border: 1px solid #999 !important;
+			}`;
 
     // This CSS block cannot be part of the 'theme' because the base pallete
     // does not exist inside the element we are modifying it, and it seems
@@ -1372,8 +1443,11 @@ Version
 				border-color: white !important;
 			}`;
 
-    function setTheme(theme) {
+    function setTheme() {
+        const theme = getPreferredTheme();
+
         if (theme == 'auto') {
+            // If the theme is auto, look up the system theme
             document.documentElement.setAttribute('wz-theme', (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
         } else {
             document.documentElement.setAttribute('wz-theme', theme);
@@ -1386,9 +1460,24 @@ Version
     function changeToDark() {
         setPreferredTheme('dark');
     }
+    function changeToAuto() {
+        setPreferredTheme('auto');
+    }
 
+    // The toggle toggles between light and the last theme ('dark' or 'auto')
+    // Since this only runs when the toggle is clicked, when being turned 'on',
+    // the current theme will always be light, which will make the last theme
+    // always dark or auto.
     function toggleTheme(event) {
-        let theme = event.target.checked ? 'dark' : 'light';
+        let theme = "light";
+
+        if (event.target.checked) {
+            if (getPreviousTheme() == "auto") {
+                theme = "auto";
+            } else {
+                theme = "dark";
+            }
+        }		 
 
         setPreferredTheme(theme);
 
@@ -1404,29 +1493,32 @@ Version
     }
 
     function addProfileToggle() {
-        let firstUserMenuItem = document.querySelector('wz-menu-item');
+        let userBox = document.querySelector('wz-user-box');
+        let wzMenuItem = userBox?.querySelector('wz-menu-item');
 
-        if (!firstUserMenuItem && profileTries <= maxUIRetries) {
-            setTimeout(() => addProfileToggle(), 1000);
-            profileTries++;
-            return;
-        } else if (!firstUserMenuItem && profileTries > maxUIRetries) {
-            console.log('wz-menu-item not found.');
-            profileTries = 0;
+        if (!wzMenuItem) {
+            if(profileTries <= maxUIRetries) {
+                profileTries++;
+                setTimeout(() => addProfileToggle(), 1000);
+            } else {
+                console.log('wz-user-box not found.');
+            }
             return;
         }
 
-        let userMenu          = firstUserMenuItem.parentNode;
         let darkModeMenuItem  = document.createElement('wz-menu-item');
 
         darkModeMenuItem.style     = 'pointer-events: none; border-bottom: 1px solid var(--separator_default, #e8eaed);';
-        darkModeMenuItem.innerHTML = `<wz-toggle-switch style="pointer-events: all;" checked="${getPreferredTheme() == 'dark'}" tabindex="0" name="wmeDarkMode" id="wme-dark-mode_switch">Dark Mode<input type="checkbox" name="wmeDarkMode" value="" style="display: none; visibility: hidden;"></wz-toggle-switch>`;
+        darkModeMenuItem.innerHTML = `<wz-toggle-switch style="pointer-events: all;" checked="true" tabindex="0" name="wmeDarkMode" id="wme-dark-mode_switch">Dark Mode<input type="checkbox" name="wmeDarkMode" value="" style="display: none; visibility: hidden;"></wz-toggle-switch>`;
 
-        userMenu.insertBefore(darkModeMenuItem, firstUserMenuItem);
+        userBox.insertBefore(darkModeMenuItem, wzMenuItem);
 
-        let darkModeSwitch = document.getElementById('wme-dark-mode_switch');
-
+        darkModeSwitch = document.getElementById('wme-dark-mode_switch');
         darkModeSwitch.addEventListener('change', toggleTheme);
+
+        // We technically call updateUI() twice since it is called per toggle option,
+        // but repeatedly calling this function is harmless.
+        updateUI();
     }
 
     function addSettingsToggle() {
@@ -1436,7 +1528,9 @@ Version
             setTimeout(() => addSettingsToggle(), 1000);
             settingsTries++;
             return;
-        } else if (!settingsDiv && settingsTries > maxUIRetries) {
+        }
+
+        if (!settingsDiv) {
             console.log('Settings div with class "settings" not found.');
             settingsTries = 0;
             return;
@@ -1447,7 +1541,6 @@ Version
         if (formDiv) {
             const newDiv = document.createElement('div');
             newDiv.classList.add('settings__form-group', 'dark-mode');
-
 
             const modeSelectionHTML = `
                 <div class="theme-select">
@@ -1460,6 +1553,9 @@ Version
                     <wz-button id="button_dark_theme" color="secondary" size="sm" value="">
                         Dark
                     </wz-button>
+                    <wz-button id="button_auto_theme" color="secondary" size="sm" value="">
+                        Auto (Dark)
+                    </wz-button>
                 </div>
                 `;
 
@@ -1468,28 +1564,17 @@ Version
             formDiv.appendChild(newDiv);
 
             // Get the wz-button by its ID
-            let lightButton = document.getElementById('button_light_theme');
-            let darkButton = document.getElementById('button_dark_theme');
+            lightButton = document.getElementById('button_light_theme');
+            darkButton  = document.getElementById('button_dark_theme');
+            autoButton  = document.getElementById('button_auto_theme');
 
-            console.log(darkButton);
-			
             lightButton.addEventListener('click', changeToLight);
             darkButton.addEventListener('click', changeToDark);
+            autoButton.addEventListener('click', changeToAuto);
 
-            if (getPreferredTheme() == 'dark') {
-                lightButton.value = "false";
-                darkButton.value  = "true";
-
-                lightButton.color = "secondary";
-                darkButton.color  = "primary";
-            } else {
-                lightButton.value = "true";
-                darkButton.value  = "false";
-
-                lightButton.color = "primary";
-                darkButton.color  = "secondary";
-            }
-
+            // We technically call updateUI() twice since it is called per toggle option,
+            // but repeatedly calling this function is harmless.
+            updateUI();
         } else {
             console.log('Form div with class "settings__form" not found.');
         }
@@ -1499,7 +1584,20 @@ Version
         addProfileToggle();
         addSettingsToggle();
     }
- 
+
+    function FUMECheck() {
+        let FUMEuiContrast = document.getElementById('_inpUIContrast');
+
+        if (FUMEuiContrast && FUMEuiContrast.options[FUMEuiContrast.selectedIndex].text != "None") {
+            const fumeWarningMessage = `FUME UI Enhancements detected with contrast enhancements set to ` +
+                                        `${FUMEuiContrast.options[FUMEuiContrast.selectedIndex].text}. Please ` +
+                                        `set 'contrast enhancement' to 'none' to make WME Dark Mode work correctly.`;
+            // Use a long timeout to make sure the user acknowledges this message
+            // since it does break the plugin if not fixed.
+            WazeWrap.Alerts.info('Dark Mode - FUME UI Contrast Warning', fumeWarningMessage, false, false, 60000);
+        }
+    } 
+	
     // We might not have the buttons loaded at this point.
     // Inject the styles directly. The code that creates the
     // Buttons will recall the correct change function which
@@ -1516,21 +1614,7 @@ Version
     if (!chatRegex.test(window.location.href) && !loginRegex.test(window.location.href)) {
         injectStyle();
     }
-
-    setTheme(getPreferredTheme());
-
-    function FUMECheck() {
-        let FUMEuiContrast = document.getElementById('_inpUIContrast');
-
-        if (FUMEuiContrast && FUMEuiContrast.options[FUMEuiContrast.selectedIndex].text != "None") {
-            const fumeWarningMessage = `FUME UI Enhancements detected with contrast enhancements set to ` +
-                                        `${FUMEuiContrast.options[FUMEuiContrast.selectedIndex].text}. Please ` +
-                                        `set 'contrast enhancement' to 'none' to make WME Dark Mode work correctly.`;
-            // Use a long timeout to make sure the user acknowledges this message
-            // since it does break the plugin if not fixed.
-            WazeWrap.Alerts.info('Dark Mode - FUME UI Contrast Warning', fumeWarningMessage, false, false, 60000);
-        }
-    }
+    setTheme();
 
     let initCalled = false;
     async function init() {
@@ -1613,18 +1697,17 @@ Version
         }
     });
 
-    // Configure the observer to watch for child nodes being added to the body (or any other element)
-    const config = {
+    // Start observing the document or a specific container
+    observer.observe(document.body, {
         childList: true,
         subtree: true
-    };
-
-    // Start observing the document or a specific container
-    observer.observe(document.body, config);
+    });
 
     function sandboxBootstrap() {
         if (WazeWrap?.Ready) {
-			wmeSDK = bootstrap({ scriptUpdateMonitor: { downloadUrl } });
+            bootstrap({
+                scriptUpdateMonitor: {downloadUrl}
+            });
             WazeWrap.Interface.ShowScriptUpdate(scriptName, scriptVersion, updateMessage);
         } else {
             setTimeout(sandboxBootstrap, 250);
