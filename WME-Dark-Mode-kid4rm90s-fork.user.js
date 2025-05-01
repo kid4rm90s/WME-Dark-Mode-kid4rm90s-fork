@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.04.1
+// @version      1.04.2
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
 // @match        *://*.waze.com/*editor*
 // @match        *://*.waze.com/chat*
-// @match        *://*.waze.com/discuss*
+// @exclude      *://*.waze.com/discuss*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addValueChangeListener
@@ -126,6 +126,10 @@ Version
        Fixed -
         - Various other bugs
 		- Waze discuss welcome font fix	
+1.04.2 - minor update to the script
+       Fixed -
+        - Various other bugs
+		- remove support for waze discuss			
 	
 */
 
