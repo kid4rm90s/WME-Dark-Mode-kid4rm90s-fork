@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.04.2
+// @version      1.04.3
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -129,7 +129,10 @@ Version
 1.04.2 - minor update to the script
        Fixed -
         - Various other bugs
-		- remove support for waze discuss			
+		- remove support for waze discuss	
+1.04.3 - minor update to the script
+       Fixed -
+        - Various other bugs			
 	
 */
 
@@ -141,7 +144,7 @@ Version
 
 (function main() {
   "use strict";
-  const updateMessage = 'Added \'Support for WME Edit Profile Enhancement\'<br>Fixed<br>- Various other bugs.<br>';
+  const updateMessage = 'Fixed<br>- Various other bugs.<br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -1646,7 +1649,7 @@ Version
         }
     }
 
-    if (W?.userscripts?.state.isInitialized) {
+   /* if (W?.userscripts?.state.isInitialized) {
         init();
     } else {
         document.addEventListener('wme-initialized',
@@ -1657,7 +1660,7 @@ Version
         // callback. In that case, we setup a timeout to call init anyway in a second.
         // This currently impacts the profile page.
         setTimeout(() => init(), 2000);
-    }
+    } */
 	
     const observer = new MutationObserver((mutationsList, observer) => {
         for (let mutation of mutationsList) {
@@ -1723,6 +1726,7 @@ Version
             bootstrap({
                 scriptUpdateMonitor: {downloadUrl}
             });
+            init();			
             WazeWrap.Interface.ShowScriptUpdate(scriptName, scriptVersion, updateMessage);
         } else {
             setTimeout(sandboxBootstrap, 250);
