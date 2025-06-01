@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.04.3
+// @version      1.04.4
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -133,7 +133,9 @@ Version
 1.04.3 - minor update to the script
        Fixed -
         - Various other bugs			
-	
+1.04.4 - Added support for WME Nav History, Lanetools
+       Fixed -
+        - Various other bugs	
 */
 
 /* global W */
@@ -144,7 +146,7 @@ Version
 
 (function main() {
   "use strict";
-  const updateMessage = 'Fixed<br>- Various other bugs.<br>';
+  const updateMessage = 'Added\'<br>Added support for WME Nav History, Lanetools<br>Fixed<br>- Various other bugs.<br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -460,6 +462,11 @@ Version
 				color: var(--content_p1);
 				border-bottom: 1px solid var(--always_dark_surface_default);
 				border-top: 1px solid var(--always_dark_surface_default);
+			}
+			
+			[wz-theme="dark"] #filter-panel-region .issue-tracker-date-range-picker {
+				border: 1px solid var(--always_dark_surface_default);
+				background: var(--background_default);
 			}
 
 			[wz-theme="dark"] .issue-panel-header .sub-title-and-actions {
@@ -1441,13 +1448,68 @@ Version
 
 			[wz-theme="dark"] .modal-content {
 				background-color: var(--background_default) !important; /*find more mentee dialogue box*/
-				border: 1px solid #999 !important;
+				border: 1px solid #9999 !important;
 			}
 			
 /************************* Waze Discuss Header *****************************************************/			
 			[wz-theme="dark"] .category-title-header .category-title-name h1 {
 				color:rgb(0, 0, 0) !important;
 			}
+
+/************************* Lane Tools **************************************************************/			
+			[wz-theme="dark"] #sidebar .direction-lanes-edit input[name=laneCount] {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] .lt-add-lanes.fwd,
+			[wz-theme="dark"] .lt-add-lanes.rev {
+				border: 1px solid #ffffff !important;
+				color: var(--content_p2) !important;
+			}
+
+/************************* WME Nav History **********************************************************/			
+			[wz-theme="dark"] .nav-history-container {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] .history-header {
+				background-color: var(--always_dark_background_default) !important;
+				}
+			[wz-theme="dark"] .history-section { 
+				background-color: var(--always_dark_surface_default) !important;
+				}	
+				
+			[wz-theme="dark"] .history-item-location {
+				color: var(--content_p1) !important;
+				}
+
+			[wz-theme="dark"] .history-item-time {
+				color: var(--content_p2) !important;
+				}
+
+			[wz-theme="dark"] .history-item-coords {
+				color: var(--content_p3) !important;
+				}	
+
+			[wz-theme="dark"] .history-item:hover {
+				background-color: var(--always_dark_background_default);
+				}
+
+			[wz-theme="dark"] .history-item.current {
+				background-color:rgb(0, 0, 0) !important;
+				}
+
+			[wz-theme="dark"] div > div > div:nth-child(8) {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] div > div > div:nth-child(8) > b:nth-child(1),
+			[wz-theme="dark"] div > div > div:nth-child(8) > ul:nth-child(2),
+			[wz-theme="dark"] div > div > div:nth-child(8) > ul:nth-child(4) {
+				color: var(--content_p2) !important;
+				}
+
+
 `;
 
     // This CSS block cannot be part of the 'theme' because the base pallete
