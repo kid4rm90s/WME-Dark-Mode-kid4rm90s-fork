@@ -7,7 +7,7 @@
 // @contributor	 kid4rm90s and luan_tavares_127
 // @match        *://*.waze.com/*editor*
 // @match        *://*.waze.com/chat*
-// @exclude      *://*.waze.com/discuss*
+// @match        *://*.waze.com/discuss*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addValueChangeListener
@@ -135,7 +135,12 @@ Version
         - Various other bugs			
 1.04.4 - Added support for WME Nav History, Lanetools
        Fixed -
-        - Various other bugs	
+        - Various other bugs
+1.03 - Added support for WME Nav History, Lanetools
+       Added back the Waze discuss, and only apply Discuss specific CSS
+       Fixed -
+        - Various other bugs
+		
 */
 
 /* global W */
@@ -241,7 +246,139 @@ Version
         setTheme();
     });	
 
-    // We are not in an iframe
+    const discussCSSModifications = `
+        /* Dark mode palette found in the chat code */
+			[wz-theme="dark"] {
+				--alarming: #ff8f8f;
+				--alarming_variant: #ff8f8f;
+				--always_white: #fff;
+				--always_black: #000;
+				--always_dark: #202124;
+				--always_dark_background_default: #202124;
+				--always_dark_background_variant: #000;
+				--always_dark_content_default: #e8eaed;
+				--always_dark_content_p1: #d5d7db;
+				--always_dark_content_p2: #b7babf;
+				--always_dark_inactive: #55595e;
+				--always_dark_surface_default: #3c4043;
+				--background_default: #202124;
+				--background_modal: rgba(32,33,36,0.6);
+				--background_table_overlay: rgba(144,149,156,0.6);
+				--background_variant: #000;
+				--brand_carpool: #1ee592;
+				--brand_waze: #3cf;
+				--cautious: #fce354;
+				--cautious_variant: #ffc400;
+				--content_default: #e8eaed;
+				--content_p1: #d5d7db;
+				--content_p2: #b7babf;
+				--content_p3: #90959c;
+				--disabled_text: #72767d;
+				--hairline: #55595e;
+				--hairline_strong: #72767d;
+				--handle: #d5d7db;
+				--hint_text: #90959c;
+				--ink_elevation: #e8eaed;
+				--ink_on_primary: #fff;
+				--ink_on_primary_focused: hsla(0,0%,100%,0.12);
+				--ink_on_primary_hovered: hsla(0,0%,100%,0.04);
+				--ink_on_primary_pressed: hsla(0,0%,100%,0.1);
+				--leading_icon: #72767d;
+				--on_primary: #202124;
+				--primary: #3cf;
+				--primary_variant: #3cf;
+				--promotion_variant: #c088ff;
+				--report_chat: #1ee592;
+				--report_closure: #feb87f;
+				--report_crash: #d5d7db;
+				--report_gas: #1bab50;
+				--report_hazard: #ffc400;
+				--report_jam: #ff5252;
+				--report_place: #c088ff;
+				--report_police: #1ab3ff;
+				--safe: #1ee592;
+				--safe_variant: #1ee592;
+				--separator_default: #3c4043;
+				--shadow_default: #000;
+				--surface_alt: #18427c;
+				--surface_default: #3c4043;
+				--surface_variant: #3c4043;
+				--surface_variant_blue: #1a3950;
+				--surface_variant_green: #1f432f;
+				--surface_variant_yellow: #4d421d;
+				--surface_variant_orange: #4c342c;
+				--surface_variant_red: #46292c;
+				--surface_variant_purple: #3d285b;
+				background-color: var(--background_default);
+				color: var(--content_default);
+				color-scheme: dark
+			}
+
+        /*********** WME Wazebar ***********************************************/
+			[wz-theme="dark"] #WazeBarSettings,
+			[wz-theme="dark"] .flex-column,
+			[wz-theme="dark"] #Wazebar {
+				background-color: var(--background_default) !important;
+				color: var(--content_p2) !important;
+			}
+
+			[wz-theme="dark"] #WazeBarAddCustomLink {
+				background-color: var(--always_dark_surface_default) !important;
+				/*its add button*/
+			}
+
+			[wz-theme="dark"] #WazeBarSettings label,
+			[wz-theme="dark"] .WazeBarText {
+				color: var(--content_p2) !important;
+			}
+
+			[wz-theme="dark"] #WazeBarSettings input[type='number'],
+			[wz-theme="dark"] #WazeBarSettings input[type='text'],
+			[wz-theme="dark"] #WazeBarSettings textarea,
+			[wz-theme="dark"] #colorPickerForumFont,
+			[wz-theme="dark"] #colorPickerWikiFont {
+				background-color: var(--background_default) !important;
+				border: 1px solid var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] .styled-select,
+			[wz-theme="dark"] .state-header {
+				background: var(--always_dark_inactive) !important;
+			}
+
+			[wz-theme="dark"] #WazeBarFavorites {
+				background: var(--always_dark_inactive) !important;
+			}
+
+			[wz-theme="dark"] .favorite-item,
+			[wz-theme="dark"] .favorite-item a {
+				background: var(--always_dark_surface_default) !important;
+				color: var(--content_p2) !important;
+			}
+
+			[wz-theme="dark"] #WazeBarFavoritesAddContainer input {
+				background-color: var(--background_default) !important;
+			}
+
+			[wz-theme="dark"] #WazeBarAddFavorite {
+				background-color: var(--always_dark_surface_default) !important;
+				/*its add button*/
+				border: 2px solid var(--always_dark_inactive) !important;
+			}
+
+			[wz-theme="dark"] #WazeBarAddFavorite:hover {
+				color: var(--content_p1) !important;
+				background-color: var(--background_default) !important;
+				border-color: var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] #WazeBarAddCustomLink:hover {
+				color: var(--content_p1) !important;
+				background-color: var(--always_dark_inactive) !important;
+				border-color: var(--always_dark_surface_default) !important;
+			}
+    `;
+
     const cssModifications = `
 			/* Dark mode palette found in the chat code */
 			[wz-theme="dark"] {
@@ -308,7 +445,7 @@ Version
 				background-color: var(--background_default);
 				color: var(--content_default);
 				color-scheme: dark
-			}	
+			}
 
 			[wz-theme="dark"] #waze-logo {
 				filter: invert(100%);
@@ -318,7 +455,7 @@ Version
 			[wz-theme="dark"] .alert-settings .alert-settings-period-label {
 				color: var(--content_p1);
 				;
-			}				
+			}
 
 			[wz-theme="dark"] body {
 				background-color: var(--background_default);
@@ -349,7 +486,7 @@ Version
 			[wz-theme="dark"] .h6 {
 				color: var(--content_p1) !important;
 			}
-				
+
 			[wz-theme="dark"] .label-text {
 				color: var(--content_p1) !important;
 			}
@@ -419,7 +556,7 @@ Version
 			[wz-theme="dark"] .waze-btn.waze-btn-blue {
 				color: white !important;
 			}
-			
+
     /* Textboxes/Dropdowns/Input Feilds */
 			[wz-theme="dark"] input[type=text] {
 		color: black !important; /* for to use with house numbering*/
@@ -463,11 +600,6 @@ Version
 				border-bottom: 1px solid var(--always_dark_surface_default);
 				border-top: 1px solid var(--always_dark_surface_default);
 			}
-			
-			[wz-theme="dark"] #filter-panel-region .issue-tracker-date-range-picker {
-				border: 1px solid var(--always_dark_surface_default);
-				background: var(--background_default);
-			}
 
 			[wz-theme="dark"] .issue-panel-header .sub-title-and-actions {
 				color: var(--content_p2);
@@ -477,6 +609,10 @@ Version
 				border: 1px solid var(--always_dark_surface_default);
 			}
 
+			[wz-theme="dark"] #filter-panel-region .issue-tracker-date-range-picker {
+				background-color: black !important;
+			}
+
 			/* 'Search This Area' box */
 			[wz-theme="dark"] .container--wzXTu {
 				background: var(--background_default);
@@ -484,6 +620,7 @@ Version
 
 			/* 'Filter Map issues' pane */
 			[wz-theme="dark"] #filter-panel-region {
+                border: 1px solid var(--always_dark_surface_default);
 				background: var(--background_default);
 			}
 
@@ -525,6 +662,87 @@ Version
 			[wz-theme="dark"] [class^="bordered"] * {
 				background-color: var(--background_default);
 			}
+
+/************************* Lane Tools **************************************************************/
+            [wz-theme="dark"] #sidebar .direction-lanes-edit input[name=laneCount] {
+                background-color: black !important;
+            }
+
+            [wz-theme="dark"] .lt-add-lanes.fwd,
+            [wz-theme="dark"] .lt-add-lanes.rev {
+                border: 1px solid #ffffff !important;
+                color: var(--content_p2) !important;
+            }
+
+            [wz-theme="dark"] .turn-angle-icon:after {
+                filter: invert(1);
+            }
+
+/************************* WME Nav History **********************************************************/
+            [wz-theme="dark"] .nav-history-container {
+                background-color: var(--background_default) !important;
+            }
+
+            [wz-theme="dark"] .history-header {
+                background-color: var(--always_dark_background_default) !important;
+                }
+            [wz-theme="dark"] .history-section {
+                background-color: var(--always_dark_surface_default) !important;
+                }
+
+            [wz-theme="dark"] .history-item-location {
+                color: var(--content_p1) !important;
+                }
+
+            [wz-theme="dark"] .history-item-time {
+                color: var(--content_p2) !important;
+                }
+
+            [wz-theme="dark"] .history-item-coords {
+                color: var(--content_p3) !important;
+                }
+
+            [wz-theme="dark"] .history-item:hover {
+                background-color: var(--always_dark_background_default);
+                }
+
+            [wz-theme="dark"] .history-item.current {
+                background-color:rgb(0, 0, 0) !important;
+                }
+
+            [wz-theme="dark"] div > div > div:nth-child(8) {
+                background-color: var(--background_default) !important;
+            }
+
+            [wz-theme="dark"] div > div > div:nth-child(8) > b:nth-child(1),
+            [wz-theme="dark"] div > div > div:nth-child(8) > ul:nth-child(2),
+            [wz-theme="dark"] div > div > div:nth-child(8) > ul:nth-child(4) {
+                color: var(--content_p2) !important;
+            }
+
+/************************ Waze Editor Profile Enhancement *****************************************/
+            [wz-theme="dark"] .nav-tabs>li.active>a {
+            background-color: var(--always_dark_inactive) !important;
+            color: var(--content_p1) !important;
+            }
+
+            [wz-theme="dark"] .s-button.s-button--mercury {
+                background-color: var(--always_dark_surface_default);
+                }
+
+            [wz-theme="dark"] #wpeWKT {
+                background-color: var(--background_default) !important;
+                box-shadow: var(--always_dark_inactive) 5px 5px 10px 4px !important;
+                }
+
+            [wz-theme="dark"] #recent-edits .recent-edits-list .recent-edits-load-more {
+                background-color: var(--background_default) !important;
+            }
+
+            [wz-theme="dark"] .modal-content {
+                background-color: var(--background_default) !important; /*find more mentee dialogue box*/
+                border: 1px solid #999 !important;
+            }
 
     /* Turn Restrictions */
 			[wz-theme="dark"] .restriction-editing-region .restriction-editing-section .restriction-editing-container {
@@ -573,7 +791,7 @@ Version
 				background-color: var(--background_default) !important;
 				border: 1px solid black;
 			}
-			
+
 			[wz-theme="dark"] .daterangepicker .calendar-table {
 				background-color: var(--background_default);
 			}
@@ -601,7 +819,7 @@ Version
 				border: solid var(--content_p1);
 				border-width: 0 2px 2px 0;
 			}
-			
+
     /* House Numbers */
 			[wz-theme="dark"] .house-number-marker {
 				background: var(--background_default);
@@ -616,7 +834,7 @@ Version
 				background-color: var(--background_default) !important;
 				box-shadow: 5px 5px 10px black !important;
 			}
-			
+
 			[wz-theme="dark"] .urceDivCloseButton {
 				background-color: var(--surface_default) !important;
 				box-shadow: 5px 5px 10px black !important;
@@ -665,7 +883,7 @@ Version
 			[wz-theme="dark"] .notification-content-container .notification-content-text-container .body {
 				color: var(--content_p1) !important;
 			}
-   
+
    /* City Names */
 			[wz-theme="dark"] .city-name-marker,
 			[wz-theme="dark"] #edit-panel .city-feature-editor .feature-editor-header {
@@ -746,7 +964,7 @@ Version
 			[wz-theme="dark"] .lock-edit-view>wz-label {
 				background-color: var(--background_default)
 			}
-			
+
     /* Click Saver */
 			[wz-theme="dark"] .cs-group-label {
 				color: var(--content_p1) !important;
@@ -756,7 +974,7 @@ Version
 			[wz-theme="dark"] .edit-closure {
 				background: var(--background_default) !important;
 			}
-			
+
 			[wz-theme="dark"] .closure-node-item {
 				background-color: var(--background_default) !important;
 			}
@@ -772,12 +990,12 @@ Version
 			[wz-theme="dark"] [class^="welcome_popup_image"] {
 				filter: invert(87%);
 			}
-			
+
     /* Previous Build dialog */
 			[wz-theme="dark"] #map-message-container .snapshot-message .snapshot-mode-message {
 				background: var(--background_default) !important;
 			}
-			
+
     /* Script update message */
 			[wz-theme="dark"] #WWSU-Container,
 			[wz-theme="dark"] .WWSU-script-item,
@@ -817,7 +1035,7 @@ Version
 				background-color: var(--background_default) !important;
 				color: var(--content_p1) !important;
 			}
-			
+
     /* .ui-widget-content.newversionpanel, .ui-widget-content.ui-dialog-buttonpane, .WMETB_NewVersionPanel.ui-widget-content { */
 			[wz-theme="dark"] .ui-widget-content,
 			[wz-theme="dark"] .ui-state-default,
@@ -1027,7 +1245,7 @@ Version
 			[wz-theme="dark"] #uroDiv {
 				background-color: var(--background_default) !important;
 			}
-			
+
 			[wz-theme="dark"] #uroCommentCount>div {
 				color: black !important;
 				filter: invert(1);
@@ -1041,12 +1259,12 @@ Version
 			[wz-theme="dark"] #gmPopupContainer {
 				background-color: var(--background_default) !important;
 			}
-			
+
    /* Waze Edit Count Monitor Plugin*/
 			[wz-theme="dark"] .secondary-toolbar .toolbar-button {
 				background-color: var(--background_default) !important;
 			}
-			
+
 			[wz-theme="dark"] #wecm-count {
 				color: var(--content_p1) !important;
 			}
@@ -1055,7 +1273,7 @@ Version
 			[wz-theme="dark"] .external-provider-action {
 				--wz-button-background-color: var(--always_dark_surface_default);
 			}
-				
+
 	/*Place alternative name delete icon*/
 			[wz-theme="dark"] .aliases .alias-item-actions {
 				--wz-button-background-color: var(--always_dark_surface_default);
@@ -1065,14 +1283,14 @@ Version
 			[wz-theme="dark"] .direction-lanes .lane-instruction .drawing .letter-circle {
 				background-color: var(--background_default) !important;
 			}
-	
+
 	/*WME Segment city tool*/
 			[wz-theme="dark"] #wmesct-container .ts-control,
 			[wz-theme="dark"] .ts-control input,
 			[wz-theme="dark"] .ts-dropdown {
 				color: var(--content_p1) !important;
 			}
-			
+
 			[wz-theme="dark"] #wmesct-container .ts-dropdown {
 				background-color: var(--background_default) !important;
 			}
@@ -1099,13 +1317,13 @@ Version
 				box-shadow: black 5px 5px 10px !important;
 				border-color: black !important;
 			}
-			
+
 			[wz-theme="dark"] #abAlerts,
 			[wz-theme="dark"] #abAlerts #header,
 			[wz-theme="dark"] #abAlerts #content {
 				background-color: var(--background_default) !important;
 			}
-			
+
     /* For some reason background variant does not work at this point. Hardcode color for now. */
 			[wz-theme="dark"] #abAlertTickBtn {
 				background-color: #3c4043 !important;
@@ -1121,14 +1339,14 @@ Version
 			[wz-theme="dark"] #shiftAmount {
 				color: white !important;
 			}
-			
+
 /******E50 Geometry information Script ********************************************/
 			[wz-theme="dark"] .e50 fieldset legend,
 			[wz-theme="dark"] .e50 li a:hover,
 			[wz-theme="dark"] .e50 li a.noaddress:hover {
 				background-color: var(--always_dark_surface_default) !important;
 			}
-			
+
 			[wz-theme="dark"] .wme-ui-panel-container,
 			[wz-theme="dark"] .wme-ui-close-panel,
 			[wz-theme="dark"] .e50 li a.noaddress,
@@ -1143,7 +1361,7 @@ Version
 			[wz-theme="dark"] legend {
 				color: var(--content_p1) !important;
 			}
-			
+
     [wz-theme="dark"] .controls-container.e50 input {
     color: var(--content_p2) !important;  /*color overrided*/
     }
@@ -1192,22 +1410,22 @@ Version
 			[wz-theme="dark"] #oslMLCDiv {
 				background-color: var(--always_dark_surface_default) !important;
 			}
-			
+
 /**********************WME Geometries************************************/
 			[wz-theme="dark"] .geometries-cb-label {
 				color: var(--content_p1) !important;
 			}
-	
+
 /***********************WME Route Checker*******************************/
 			[wz-theme="dark"] #routeTest>p>b {
 				color: white !important;
 			}
-			
+
 /*Show routes between these 2 segments*/
 			[wz-theme="dark"] a#goroutes {
 				color: var(--content_p1) !important;
 			}
-			
+
 			[wz-theme="dark"] #routeTest a.step:hover {
 				background-color: var(--always_dark_surface_default) !important;
 			}
@@ -1225,7 +1443,7 @@ Version
 			[wz-theme="dark"] #routeTest a.step {
 				color: var(--content_p1) !important;
 			}
-	
+
 /******************* WME Validator *************************************/
 			[wz-theme="dark"] c2821834349>input:disabled+label,
 			[wz-theme="dark"] .c2821834349>input:disabled+label {
@@ -1249,12 +1467,12 @@ Version
 			[wz-theme="dark"] .c3210313671>button:disabled {
 				background-color: var(--always_dark_surface_default) !important;
 			}
-			
+
 /***** Re-lock Segments & POI***********************************************/	
 			[wz-theme="dark"] .tg .tg-header {
 				background-color: var(--always_dark_surface_default) !important;
 			}
-	
+
 /***** WME Locksmith *****************************************************/ 
 			[wz-theme="dark"] .ls-Wrapper {
 				background-color: var(--background_default) !important;
@@ -1308,13 +1526,13 @@ Version
 			[wz-theme="dark"] #wmech_mteradiosdiv {
 				background-color: var(--always_dark_surface_default) !important;
 			}
-			
+
 			[wz-theme="dark"] div[id^="wmech_presetrow"] input[type="text"],
 			[wz-theme="dark"] #wmech-settings-boxes input,
 			[wz-theme="dark"] #wmech-settings-boxes #wmech_settingcustomcs {
 				color: var(--content_p2) !important;
 			}
-			
+
 			[wz-theme="dark"] #uroAlerts,
 			[wz-theme="dark"] #content {
 				background-color: var(--background_default) !important;
@@ -1336,7 +1554,7 @@ Version
 			[wz-theme="dark"] wz-image-chip img {
 				filter: invert(100%);
 			}
-	
+
 /*********** WME Wazebar ***********************************************/
 			[wz-theme="dark"] #WazeBarSettings,
 			[wz-theme="dark"] .flex-column,
@@ -1344,12 +1562,12 @@ Version
 				background-color: var(--background_default) !important;
 				color: var(--content_p2) !important;
 			}
-			
+
 			[wz-theme="dark"] #WazeBarAddCustomLink {
 				background-color: var(--always_dark_surface_default) !important;
 				/*its add button*/
 			}
-			
+
 			[wz-theme="dark"] #WazeBarSettings label,
 			[wz-theme="dark"] .WazeBarText {
 				color: var(--content_p2) !important;
@@ -1363,7 +1581,7 @@ Version
 				background-color: var(--background_default) !important;
 				border: 1px solid var(--always_dark_surface_default) !important;
 			}
-			
+
 			[wz-theme="dark"] .styled-select,
 			[wz-theme="dark"] .state-header {
 				background: var(--always_dark_inactive) !important;
@@ -1425,92 +1643,7 @@ Version
                 /* This is being inverted for the chat bubble. We want black,
                    so we say white */
                 background-color: white !important;
-            }
-			
-/************************ Waze Editor Profile Enhancement *****************************************/			
-			[wz-theme="dark"] .nav-tabs>li.active>a {
-			background-color: var(--always_dark_inactive) !important;
-			color: var(--content_p1) !important;
-			}
-			
-			[wz-theme="dark"] .s-button.s-button--mercury {
-				background-color: var(--always_dark_surface_default);
-				}
-				
-			[wz-theme="dark"] #wpeWKT {
-				background-color: var(--background_default) !important;
-				box-shadow: var(--always_dark_inactive) 5px 5px 10px 4px !important;				
-				}
-				
-			[wz-theme="dark"] #recent-edits .recent-edits-list .recent-edits-load-more {
-				background-color: var(--background_default) !important;
-			}
-
-			[wz-theme="dark"] .modal-content {
-				background-color: var(--background_default) !important; /*find more mentee dialogue box*/
-				border: 1px solid #9999 !important;
-			}
-			
-/************************* Waze Discuss Header *****************************************************/			
-			[wz-theme="dark"] .category-title-header .category-title-name h1 {
-				color:rgb(0, 0, 0) !important;
-			}
-
-/************************* Lane Tools **************************************************************/			
-			[wz-theme="dark"] #sidebar .direction-lanes-edit input[name=laneCount] {
-				background-color: var(--background_default) !important;
-			}
-
-			[wz-theme="dark"] .lt-add-lanes.fwd,
-			[wz-theme="dark"] .lt-add-lanes.rev {
-				border: 1px solid #ffffff !important;
-				color: var(--content_p2) !important;
-			}
-
-/************************* WME Nav History **********************************************************/			
-			[wz-theme="dark"] .nav-history-container {
-				background-color: var(--background_default) !important;
-			}
-
-			[wz-theme="dark"] .history-header {
-				background-color: var(--always_dark_background_default) !important;
-				}
-			[wz-theme="dark"] .history-section { 
-				background-color: var(--always_dark_surface_default) !important;
-				}	
-				
-			[wz-theme="dark"] .history-item-location {
-				color: var(--content_p1) !important;
-				}
-
-			[wz-theme="dark"] .history-item-time {
-				color: var(--content_p2) !important;
-				}
-
-			[wz-theme="dark"] .history-item-coords {
-				color: var(--content_p3) !important;
-				}	
-
-			[wz-theme="dark"] .history-item:hover {
-				background-color: var(--always_dark_background_default);
-				}
-
-			[wz-theme="dark"] .history-item.current {
-				background-color:rgb(0, 0, 0) !important;
-				}
-
-			[wz-theme="dark"] div > div > div:nth-child(8) {
-				background-color: var(--background_default) !important;
-			}
-
-			[wz-theme="dark"] div > div > div:nth-child(8) > b:nth-child(1),
-			[wz-theme="dark"] div > div > div:nth-child(8) > ul:nth-child(2),
-			[wz-theme="dark"] div > div > div:nth-child(8) > ul:nth-child(4) {
-				color: var(--content_p2) !important;
-				}
-
-
-`;
+            }`;
 
     // This CSS block cannot be part of the 'theme' because the base pallete
     // does not exist inside the element we are modifying it, and it seems
@@ -1557,7 +1690,7 @@ Version
             } else {
                 theme = "dark";
             }
-        }		 
+        }
 
         setPreferredTheme(theme);
 
@@ -1569,6 +1702,12 @@ Version
     function injectStyle() {
         let styleElement = document.createElement('style');
         styleElement.innerHTML = cssModifications;
+        document.head.appendChild(styleElement);
+    }
+
+    function injectDiscussStyle() {
+        let styleElement = document.createElement('style');
+        styleElement.innerHTML = discussCSSModifications;
         document.head.appendChild(styleElement);
     }
 
@@ -1659,7 +1798,7 @@ Version
             console.log('Form div with class "settings__form" not found.');
         }
     }
-		   
+
     function addThemeToggleButtons() {
         addProfileToggle();
         addSettingsToggle();
@@ -1676,24 +1815,32 @@ Version
             // since it does break the plugin if not fixed.
             WazeWrap.Alerts.info('Dark Mode - FUME UI Contrast Warning', fumeWarningMessage, false, false, 60000);
         }
-    } 
-	
+    }
+
     // We might not have the buttons loaded at this point.
     // Inject the styles directly. The code that creates the
     // Buttons will recall the correct change function which
     // will highlight the correct button.
 
+    const chatRegex = new RegExp(".*://.*\.waze.com/chat.*");
+    const loginRegex = new RegExp(".*://.*\.waze\.com/.*signin.*");
+    const discussRegex = new RegExp(".*://.*\.waze\.com/discuss.*");
+
+    if (discussRegex.test(window.location.href)) {
+        // Waze Discuss does not need the majority of our CSS
+        // modifications. We load a much lower amount of CSS
+        // which targets only plugins such as the WazeBar that
+        // get loaded for Waze Discuss.
+        injectDiscussStyle();
+    } else if (!chatRegex.test(window.location.href) && !loginRegex.test(window.location.href)) {
     // We do not need to inject the style for the chat or the
     // login screen. These two are in iframes and implement
     // dark mode already. We pick it up for free with the
     // switching mechanism.
 
-    const chatRegex = new RegExp(".*://.*\.waze.com/chat.*");
-    const loginRegex = new RegExp(".*://.*\.waze\.com/.*signin.*");
-
-    if (!chatRegex.test(window.location.href) && !loginRegex.test(window.location.href)) {
         injectStyle();
     }
+
     setTheme();
 
     let initCalled = false;
@@ -1723,13 +1870,13 @@ Version
         // This currently impacts the profile page.
         setTimeout(() => init(), 2000);
     } */
-	
+
     const observer = new MutationObserver((mutationsList, observer) => {
         for (let mutation of mutationsList) {
             if (mutation.type === 'childList') {
                 // Check if added nodes contain a custom element
                 mutation.addedNodes.forEach(node => {
-                    if(getPreferredTheme() == 'dark') {
+                    if (getPreferredTheme() == 'dark') {
                         // Waze tooltips (editing disabled messages) are dynamically
                         // added blocks with shadow roots
                         // We must use JS to modify it as it is being created
@@ -1742,7 +1889,7 @@ Version
                                 if (style.includes('wz-tooltip-content-background-color')) {
                                     style = style.replace(/wz-tooltip-content-background-color:[^;]*;/, 'wz-tooltip-content-background-color: #202124;');
                                 }
-								
+
                                 // Change the box shadow to be a white outline
                                 if (style.includes('wz-tooltip-content-box-shadow')) {
                                     style = style.replace(/wz-tooltip-content-box-shadow:[^;]*;/,
