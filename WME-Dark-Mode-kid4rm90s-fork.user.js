@@ -136,7 +136,7 @@ Version
 1.04.4 - Added support for WME Nav History, Lanetools
        Fixed -
         - Various other bugs
-1.03 - Added support for WME Nav History, Lanetools
+1.04.5 - Added support for WME Nav History, Lanetools
        Added back the Waze discuss, and only apply Discuss specific CSS
        Fixed -
         - Various other bugs
