@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.04.6
+// @version      1.04.7
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -142,7 +142,10 @@ Version
         - Various other bugs
 1.04.6 - Added support for WME Live Map Overlays
        Fixed -
-        - Various other bugs		
+        - Various other bugs
+1.04.7 - 
+       Fixed -
+        - City name will be correctly displayed on hovering		
 		
 */
 
@@ -154,7 +157,7 @@ Version
 
 (function main() {
   'use strict';
-  const updateMessage = "Added'<br>Added support for WME LiveMap Overlay<br>Fixed<br>- Various other bugs.<br>";
+  const updateMessage = "Added<br><br>Fixed<br>- City name will be correctly displayed on hovering.<br>";
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -892,8 +895,9 @@ Version
 
 			[wz-theme="dark"] .city-name-marker:hover,
 			[wz-theme="dark"] .city-name-marker.selected {
+				background-color: #00ece3;
 				color: black;
-			}
+			}   
 
 	/* WMEPH Plugin */
 			/* These are gray icons. We can either make a white border per icon or put a white boarder around all of them */
