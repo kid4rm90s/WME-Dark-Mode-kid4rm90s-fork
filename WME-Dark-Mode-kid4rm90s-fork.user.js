@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.04.7
+// @version      1.04.8
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -145,7 +145,9 @@ Version
         - Various other bugs
 1.04.7 - 
        Fixed -
-        - City name will be correctly displayed on hovering		
+        - City name will be correctly displayed on hovering
+1.04.8- Fixed -
+        - Nav History CSS targetting place names
 		
 */
 
@@ -157,7 +159,7 @@ Version
 
 (function main() {
   'use strict';
-  const updateMessage = "Added<br><br>Fixed<br>- City name will be correctly displayed on hovering.<br>";
+  const updateMessage = 'Fixed -<br>- Nav History CSS sometimes targetting place names.<br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -713,14 +715,13 @@ Version
                 background-color:rgb(0, 0, 0) !important;
                 }
 
-            [wz-theme="dark"] div > div > div:nth-child(8) {
+            [wz-theme="dark"] .nav-history-container > div {
                 background-color: var(--background_default) !important;
             }
 
-            [wz-theme="dark"] div > div > div:nth-child(8) > b:nth-child(1),
-            [wz-theme="dark"] div > div > div:nth-child(8) > ul:nth-child(2),
-            [wz-theme="dark"] div > div > div:nth-child(8) > ul:nth-child(4) {
-                color: var(--content_p2) !important;
+            [wz-theme="dark"] .nav-history-container > div > b,
+            [wz-theme="dark"] .nav-history-container > div > ul {
+                color: var(--content_p1) !important;
             }
 
 /************************ Waze Editor Profile Enhancement *****************************************/
