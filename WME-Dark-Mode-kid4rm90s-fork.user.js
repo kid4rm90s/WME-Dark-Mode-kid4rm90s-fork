@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.04.8
+// @version      1.04.9
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -148,6 +148,8 @@ Version
         - City name will be correctly displayed on hovering
 1.04.8- Fixed -
         - Nav History CSS targetting place names
+1.04.9- Fixed -
+        - Nepali WMS Payers pop-up and discuss CSS
 		
 */
 
@@ -159,7 +161,7 @@ Version
 
 (function main() {
   'use strict';
-  const updateMessage = 'Fixed -<br>- Nav History CSS sometimes targetting place names.<br>';
+  const updateMessage = 'Fixed -<br>- Nepali WMS Payers pop-up and discuss CSS<br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -241,149 +243,61 @@ Version
   }
 
   GM_addValueChangeListener('wz-theme', function (key, oldValue, newValue, remote) {
-    updateUI();
-    setTheme();
+	  if (!discussRegex.test(window.location.href)) {
+		  updateUI();
+		  setTheme();
+	  }
   });
 
   // Detect changes in the system theme.
   // We always need to update the UI to change the text in ()s - Auto Mode ([mode])
   // Calling setTheme even if there is no need to change is fine
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
-    updateUI();
-    setTheme();
+	window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+		if (!discussRegex.test(window.location.href)) {
+			updateUI();
+			setTheme();
+		}
   });
 
   const discussCSSModifications = `
-        /* Dark mode palette found in the chat code */
-			[wz-theme="dark"] {
-				--alarming: #ff8f8f;
-				--alarming_variant: #ff8f8f;
-				--always_white: #fff;
-				--always_black: #000;
-				--always_dark: #202124;
-				--always_dark_background_default: #202124;
-				--always_dark_background_variant: #000;
-				--always_dark_content_default: #e8eaed;
-				--always_dark_content_p1: #d5d7db;
-				--always_dark_content_p2: #b7babf;
-				--always_dark_inactive: #55595e;
-				--always_dark_surface_default: #3c4043;
-				--background_default: #202124;
-				--background_modal: rgba(32,33,36,0.6);
-				--background_table_overlay: rgba(144,149,156,0.6);
-				--background_variant: #000;
-				--brand_carpool: #1ee592;
-				--brand_waze: #3cf;
-				--cautious: #fce354;
-				--cautious_variant: #ffc400;
-				--content_default: #e8eaed;
-				--content_p1: #d5d7db;
-				--content_p2: #b7babf;
-				--content_p3: #90959c;
-				--disabled_text: #72767d;
-				--hairline: #55595e;
-				--hairline_strong: #72767d;
-				--handle: #d5d7db;
-				--hint_text: #90959c;
-				--ink_elevation: #e8eaed;
-				--ink_on_primary: #fff;
-				--ink_on_primary_focused: hsla(0,0%,100%,0.12);
-				--ink_on_primary_hovered: hsla(0,0%,100%,0.04);
-				--ink_on_primary_pressed: hsla(0,0%,100%,0.1);
-				--leading_icon: #72767d;
-				--on_primary: #202124;
-				--primary: #3cf;
-				--primary_variant: #3cf;
-				--promotion_variant: #c088ff;
-				--report_chat: #1ee592;
-				--report_closure: #feb87f;
-				--report_crash: #d5d7db;
-				--report_gas: #1bab50;
-				--report_hazard: #ffc400;
-				--report_jam: #ff5252;
-				--report_place: #c088ff;
-				--report_police: #1ab3ff;
-				--safe: #1ee592;
-				--safe_variant: #1ee592;
-				--separator_default: #3c4043;
-				--shadow_default: #000;
-				--surface_alt: #18427c;
-				--surface_default: #3c4043;
-				--surface_variant: #3c4043;
-				--surface_variant_blue: #1a3950;
-				--surface_variant_green: #1f432f;
-				--surface_variant_yellow: #4d421d;
-				--surface_variant_orange: #4c342c;
-				--surface_variant_red: #46292c;
-				--surface_variant_purple: #3d285b;
-				background-color: var(--background_default);
-				color: var(--content_default);
-				color-scheme: dark
-			}
-
         /*********** WME Wazebar ***********************************************/
-			[wz-theme="dark"] #WazeBarSettings,
-			[wz-theme="dark"] .flex-column,
-			[wz-theme="dark"] #Wazebar {
-				background-color: var(--background_default) !important;
-				color: var(--content_p2) !important;
+#WazeBarSettings,
+			.flex-column,
+			#Wazebar,
+            #WazeBarSettings label,
+			.WazeBarText,
+            #WazeBarSettings input[type='number'],
+			#WazeBarSettings input[type='text'],
+			#WazeBarSettings textarea,
+			#colorPickerForumFont,
+			#colorPickerWikiFont,
+			.state-header,
+            #WazeBarFavorites,
+            #WazeBarFavoritesAddContainer input,
+            #WazeBarCustomLinksList > .custom-item,
+            #WazeBarCustomLinksList > .custom-item > a {
+				background-color: var(--header_background) !important;
+				color: var(--primary) !important;
 			}
 
-			[wz-theme="dark"] #WazeBarAddCustomLink {
-				background-color: var(--always_dark_surface_default) !important;
-				/*its add button*/
-			}
-
-			[wz-theme="dark"] #WazeBarSettings label,
-			[wz-theme="dark"] .WazeBarText {
-				color: var(--content_p2) !important;
-			}
-
-			[wz-theme="dark"] #WazeBarSettings input[type='number'],
-			[wz-theme="dark"] #WazeBarSettings input[type='text'],
-			[wz-theme="dark"] #WazeBarSettings textarea,
-			[wz-theme="dark"] #colorPickerForumFont,
-			[wz-theme="dark"] #colorPickerWikiFont {
-				background-color: var(--background_default) !important;
-				border: 1px solid var(--always_dark_surface_default) !important;
-			}
-
-			[wz-theme="dark"] .styled-select,
-			[wz-theme="dark"] .state-header {
-				background: var(--always_dark_inactive) !important;
-			}
-
-			[wz-theme="dark"] #WazeBarFavorites {
-				background: var(--always_dark_inactive) !important;
-			}
-
-			[wz-theme="dark"] .favorite-item,
-			[wz-theme="dark"] .favorite-item a {
-				background: var(--always_dark_surface_default) !important;
-				color: var(--content_p2) !important;
-			}
-
-			[wz-theme="dark"] #WazeBarFavoritesAddContainer input {
-				background-color: var(--background_default) !important;
-			}
-
-			[wz-theme="dark"] #WazeBarAddFavorite {
-				background-color: var(--always_dark_surface_default) !important;
-				/*its add button*/
-				border: 2px solid var(--always_dark_inactive) !important;
-			}
-
-			[wz-theme="dark"] #WazeBarAddFavorite:hover {
-				color: var(--content_p1) !important;
-				background-color: var(--background_default) !important;
-				border-color: var(--always_dark_surface_default) !important;
-			}
-
-			[wz-theme="dark"] #WazeBarAddCustomLink:hover {
-				color: var(--content_p1) !important;
-				background-color: var(--always_dark_inactive) !important;
-				border-color: var(--always_dark_surface_default) !important;
-			}
+            #WazeBarAddCustomLink,
+            #WazeBarAddFavorite,
+            .favorite-item,
+            .WBRegions,
+            .styled-select,
+            .favorite-item a {
+				background-color: var(--d-sidebar-highlight-background) !important;
+				background: var(--d-sidebar-highlight-background) !important;
+				color: var(--primary) !important;
+            }
+#WazeBarAddFavorite:hover,
+            #WazeBarAddCustomLink:hover,
+            .favorite-item:hover,
+			.favorite-item a:hover {
+				background-color: var(--d-hover) !important;
+				background: var(--d-hover) !important;
+				color: var(--primary) !important;
+            }
     `;
 
   const cssModifications = `
@@ -1654,7 +1568,12 @@ Version
             [wz-theme="dark"] #divLMAO {
                 background-color: var(--background_default) !important;
                 box-shadow: var(--always_dark_inactive) 5px 5px 10px !important;
-            }	
+            }
+
+/*********** Nepali WMS Layers ***********************************************/			
+            [wz-theme="dark"] #wms-info-popup {
+                background-color: var(--background_default) !important;
+            }
 			`;
 
   // This CSS block cannot be part of the 'theme' because the base pallete
@@ -1854,7 +1773,9 @@ Version
     injectStyle();
   }
 
-  setTheme();
+    if (!discussRegex.test(window.location.href)) {
+        setTheme();
+    }
 
   let initCalled = false;
   async function init() {
