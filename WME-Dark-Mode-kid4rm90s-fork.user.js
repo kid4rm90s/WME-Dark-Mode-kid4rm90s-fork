@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.04.9
+// @version      1.05.1
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -150,7 +150,9 @@ Version
         - Nav History CSS targetting place names
 1.04.9- Fixed -
         - Nepali WMS Payers pop-up and discuss CSS
-		
+1.05.1 - Fixed -
+		- Compability update for beta v2.309-4-g228d26d917 [2.1.2255.0-41e4168a5]
+
 */
 
 /* global W */
@@ -161,7 +163,7 @@ Version
 
 (function main() {
   'use strict';
-  const updateMessage = 'Fixed -<br>- Nepali WMS Payers pop-up and discuss CSS<br>';
+  const updateMessage = 'Fixed -<br>- Compability update for beta v2.309-4-g228d26d917 [2.1.2255.0-41e4168a5] <br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -243,20 +245,20 @@ Version
   }
 
   GM_addValueChangeListener('wz-theme', function (key, oldValue, newValue, remote) {
-	  if (!discussRegex.test(window.location.href)) {
-		  updateUI();
-		  setTheme();
-	  }
+    if (!discussRegex.test(window.location.href)) {
+      updateUI();
+      setTheme();
+    }
   });
 
   // Detect changes in the system theme.
   // We always need to update the UI to change the text in ()s - Auto Mode ([mode])
   // Calling setTheme even if there is no need to change is fine
-	window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
-		if (!discussRegex.test(window.location.href)) {
-			updateUI();
-			setTheme();
-		}
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (event) => {
+    if (!discussRegex.test(window.location.href)) {
+      updateUI();
+      setTheme();
+    }
   });
 
   const discussCSSModifications = `
@@ -1689,25 +1691,28 @@ Version
     const formDiv = settingsDiv.querySelector('.settings__form');
 
     if (formDiv) {
+      // Prevent duplicate injection
+      if (formDiv.querySelector('.theme-select')) return;
+
       const newDiv = document.createElement('div');
       newDiv.classList.add('settings__form-group', 'dark-mode');
 
       const modeSelectionHTML = `
-                <div class="theme-select">
-                    <wz-label class="themes-select__label" html-for="">
-                        Color Theme
-                    </wz-label>
-                    <wz-button id="button_light_theme" color="primary" size="sm" value="">
-                        Light
-                    </wz-button>
-                    <wz-button id="button_dark_theme" color="secondary" size="sm" value="">
-                        Dark
-                    </wz-button>
-                    <wz-button id="button_auto_theme" color="secondary" size="sm" value="">
-                        Auto (Dark)
-                    </wz-button>
-                </div>
-                `;
+		<div class="theme-select">
+			<wz-label class="themes-select__label" html-for="">
+				Color Theme
+			</wz-label>
+			<wz-button id="button_light_theme" color="primary" size="sm" value="">
+				Light
+			</wz-button>
+			<wz-button id="button_dark_theme" color="secondary" size="sm" value="">
+				Dark
+			</wz-button>
+			<wz-button id="button_auto_theme" color="secondary" size="sm" value="">
+				Auto (Dark)
+			</wz-button>
+		</div>
+		 `;
 
       newDiv.innerHTML = modeSelectionHTML;
 
@@ -1722,16 +1727,28 @@ Version
       darkButton.addEventListener('click', changeToDark);
       autoButton.addEventListener('click', changeToAuto);
 
-      // We technically call updateUI() twice since it is called per toggle option,
-      // but repeatedly calling this function is harmless.
       updateUI();
     } else {
       console.log('Form div with class "settings__form" not found.');
     }
   }
 
+  // MutationObserver integration for settings UI
+  function observeSettingsUI() {
+    const target = document.body;
+    if (!target) return;
+    const observer = new MutationObserver(() => {
+      const settingsDiv = document.querySelector('.settings');
+      if (settingsDiv) {
+        addSettingsToggle();
+      }
+    });
+    observer.observe(target, { childList: true, subtree: true });
+  }
+
   function addThemeToggleButtons() {
     addProfileToggle();
+    observeSettingsUI();
     addSettingsToggle();
   }
 
@@ -1740,9 +1757,7 @@ Version
 
     if (FUMEuiContrast && FUMEuiContrast.options[FUMEuiContrast.selectedIndex].text != 'None') {
       const fumeWarningMessage =
-        `FUME UI Enhancements detected with contrast enhancements set to ` +
-        `${FUMEuiContrast.options[FUMEuiContrast.selectedIndex].text}. Please ` +
-        `set 'contrast enhancement' to 'none' to make WME Dark Mode work correctly.`;
+        `FUME UI Enhancements detected with contrast enhancements set to ` + `${FUMEuiContrast.options[FUMEuiContrast.selectedIndex].text}. Please ` + `set 'contrast enhancement' to 'none' to make WME Dark Mode work correctly.`;
       // Use a long timeout to make sure the user acknowledges this message
       // since it does break the plugin if not fixed.
       WazeWrap.Alerts.info('Dark Mode - FUME UI Contrast Warning', fumeWarningMessage, false, false, 60000);
@@ -1773,9 +1788,9 @@ Version
     injectStyle();
   }
 
-    if (!discussRegex.test(window.location.href)) {
-        setTheme();
-    }
+  if (!discussRegex.test(window.location.href)) {
+    setTheme();
+  }
 
   let initCalled = false;
   async function init() {
