@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.05.1
+// @version      1.05.2
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -152,6 +152,8 @@ Version
         - Nepali WMS Payers pop-up and discuss CSS
 1.05.1 - Fixed -
 		- Compability update for beta v2.309-4-g228d26d917 [2.1.2255.0-41e4168a5]
+1.05.1 - Fixed -
+		- Issue with dark mode not applying correctly when adding closure.
 
 */
 
@@ -163,7 +165,7 @@ Version
 
 (function main() {
   'use strict';
-  const updateMessage = 'Fixed -<br>- Compability update for beta v2.309-4-g228d26d917 [2.1.2255.0-41e4168a5] <br>';
+  const updateMessage = 'Fixed -<br>- Issue with dark mode not applying correctly when adding closure. <br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -892,7 +894,8 @@ Version
 			}
 
     /* Turn, Segment Closures */
-			[wz-theme="dark"] .edit-closure {
+	
+			[wz-theme="dark"] .closure {
 				background: var(--background_default) !important;
 			}
 
