@@ -1202,60 +1202,61 @@ Version
 				background-color: var(--background_default) !important;
 			}
 
-/* Container + table base */
-[wz-theme="dark"] #wecm-time-history-table {
-  background: var(--always_dark_background_default);
-  border: 1px solid var(--always_dark_inactive) !important;
-}
-[wz-theme="dark"] #wecm-time-history-table table {
-  background: var(--always_dark_background_default);
-  color: white;
-  border-collapse: collapse;
-}
+  /* Container + table base */
+			[wz-theme="dark"] #wecm-time-history-table {
+  				background: var(--always_dark_background_default);
+  			border: 1px solid var(--always_dark_inactive) !important;
+			}
 
-/* Header (bar + cells) */
-[wz-theme="dark"] #wecm-time-history-table thead {
-  background: var(--always_dark_inactive) !important;
-  color: white !important;
-  border-bottom: 1px solid var(--always_dark_inactive) !important;
-}
-[wz-theme="dark"] #wecm-time-history-table th,
-[wz-theme="dark"] #wecm-time-history-table td {
-  border-bottom: 1px solid var(--always_dark_inactive) !important;
-  color: white !important;
-}
+  			[wz-theme="dark"] #wecm-time-history-table table {
+  				background: var(--always_dark_background_default);
+  				color: white;
+  				border-collapse: collapse;
+			}
 
-/* Body rows (base, zebra, hover) */
-[wz-theme="dark"] #wecm-time-history-table tbody tr {
-  background: var(--always_dark_background_default) !important;
-}
-[wz-theme="dark"] #wecm-time-history-table tbody tr:nth-child(odd) {
-  background: var(--always_dark_surface_default) !important;
-}
-[wz-theme="dark"] #wecm-time-history-table tbody tr:hover > td,
-[wz-theme="dark"] #wecm-time-history-table tbody tr:hover > th {
-  background: var(--always_dark_inactive) !important;
-  cursor: pointer;
-}
+	   /* Header (bar + cells) */
+			[wz-theme="dark"] #wecm-time-history-table thead {
+  				background: var(--always_dark_inactive) !important;
+  				color: white !important;
+  				border-bottom: 1px solid var(--always_dark_inactive) !important;
+			}
+			[wz-theme="dark"] #wecm-time-history-table th,
+			[wz-theme="dark"] #wecm-time-history-table td {
+  				border-bottom: 1px solid var(--always_dark_inactive) !important;
+  				color: white !important;
+			}
 
-/* Delete button (normal + hover) */
-[wz-theme="dark"] #wecm-time-history-table .wecm-delete-session-btn {
-  color: white !important;
-  border: 1px solid var(--always_dark_surface_default) !important;
-  transition: background 0.2s ease;
-}
+  /* Body rows (base, zebra, hover) */
+			[wz-theme="dark"] #wecm-time-history-table tbody tr {
+  				background: var(--always_dark_background_default) !important;
+			}
+			[wz-theme="dark"] #wecm-time-history-table tbody tr:nth-child(odd) {
+  				background: var(--always_dark_surface_default) !important;
+			}
+			[wz-theme="dark"] #wecm-time-history-table tbody tr:hover > td,
+			[wz-theme="dark"] #wecm-time-history-table tbody tr:hover > th {
+  				background: var(--always_dark_inactive) !important;
+  				cursor: pointer;
+			}
 
-[wz-theme="dark"] .wecm-total-summary {
-  background: var(--always_dark_surface_default) !important;
-  color: white !important;
-  border: 1px solid var(--always_dark_inactive) !important;
-  box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1) !important;
-}
+	/* Delete button (normal + hover) */
+			[wz-theme="dark"] #wecm-time-history-table .wecm-delete-session-btn {
+  				color: white !important;
+  				border: 1px solid var(--always_dark_surface_default) !important;
+  				transition: background 0.2s ease;
+			}
 
-[wz-theme="dark"] #wecm-save-time-btn,
-[wz-theme="dark"] #wecm-clear-history-btn {
-  color: white !important;
-}
+			[wz-theme="dark"] .wecm-total-summary {
+  				background: var(--always_dark_surface_default) !important;
+  				color: white !important;
+  				border: 1px solid var(--always_dark_inactive) !important;
+  				box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1) !important;
+			}
+
+			[wz-theme="dark"] #wecm-save-time-btn,
+			[wz-theme="dark"] #wecm-clear-history-btn {
+  				color: white !important;
+			}
 
 			[wz-theme="dark"] #wecm-count {
 				color: var(--content_p1) !important;
