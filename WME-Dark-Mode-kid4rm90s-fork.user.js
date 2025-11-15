@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.05.2
+// @version      1.08.1
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -152,8 +152,13 @@ Version
         - Nepali WMS Payers pop-up and discuss CSS
 1.05.1 - Fixed -
 		- Compability update for beta v2.309-4-g228d26d917 [2.1.2255.0-41e4168a5]
-1.05.1 - Fixed -
+1.05.2 - Fixed -
 		- Issue with dark mode not applying correctly when adding closure.
+1.08.1 - Fixed -
+        - Closure panel post WME update
+        - History fetching error background
+        - Hover on segment restriction table
+        - Waze Edit Count Session History
 
 */
 
@@ -165,7 +170,7 @@ Version
 
 (function main() {
   'use strict';
-  const updateMessage = 'Fixed -<br>- Issue with dark mode not applying correctly when adding closure. <br>';
+  const updateMessage = 'Fixed -<br>- Closure panel post WME update. <br> - History fetching error background. <br>- Hover on segment restriction table. <br>- Waze Edit Count Session History. <br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -371,6 +376,10 @@ Version
 				color: var(--content_default);
 				color-scheme: dark
 			}
+
+			[wz-theme="dark"] .history-message {
+				background-color: var(--background_default);
+            }
 
 			[wz-theme="dark"] #waze-logo {
 				filter: invert(100%);
@@ -688,6 +697,10 @@ Version
 			}
 
 			[wz-theme="dark"] .restrictions-summary .restrictions-table th {
+				background: var(--always_dark_inactive) !important;
+			}
+
+			[wz-theme="dark"] .restrictions-summary .restriction-list-item:hover td {
 				background: var(--always_dark_inactive) !important;
 			}
 			
@@ -1188,6 +1201,61 @@ Version
 			[wz-theme="dark"] .secondary-toolbar .toolbar-button {
 				background-color: var(--background_default) !important;
 			}
+
+/* Container + table base */
+[wz-theme="dark"] #wecm-time-history-table {
+  background: var(--always_dark_background_default);
+  border: 1px solid var(--always_dark_inactive) !important;
+}
+[wz-theme="dark"] #wecm-time-history-table table {
+  background: var(--always_dark_background_default);
+  color: white;
+  border-collapse: collapse;
+}
+
+/* Header (bar + cells) */
+[wz-theme="dark"] #wecm-time-history-table thead {
+  background: var(--always_dark_inactive) !important;
+  color: white !important;
+  border-bottom: 1px solid var(--always_dark_inactive) !important;
+}
+[wz-theme="dark"] #wecm-time-history-table th,
+[wz-theme="dark"] #wecm-time-history-table td {
+  border-bottom: 1px solid var(--always_dark_inactive) !important;
+  color: white !important;
+}
+
+/* Body rows (base, zebra, hover) */
+[wz-theme="dark"] #wecm-time-history-table tbody tr {
+  background: var(--always_dark_background_default) !important;
+}
+[wz-theme="dark"] #wecm-time-history-table tbody tr:nth-child(odd) {
+  background: var(--always_dark_surface_default) !important;
+}
+[wz-theme="dark"] #wecm-time-history-table tbody tr:hover > td,
+[wz-theme="dark"] #wecm-time-history-table tbody tr:hover > th {
+  background: var(--always_dark_inactive) !important;
+  cursor: pointer;
+}
+
+/* Delete button (normal + hover) */
+[wz-theme="dark"] #wecm-time-history-table .wecm-delete-session-btn {
+  color: white !important;
+  border: 1px solid var(--always_dark_surface_default) !important;
+  transition: background 0.2s ease;
+}
+
+[wz-theme="dark"] .wecm-total-summary {
+  background: var(--always_dark_surface_default) !important;
+  color: white !important;
+  border: 1px solid var(--always_dark_inactive) !important;
+  box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1) !important;
+}
+
+[wz-theme="dark"] #wecm-save-time-btn,
+[wz-theme="dark"] #wecm-clear-history-btn {
+  color: white !important;
+}
 
 			[wz-theme="dark"] #wecm-count {
 				color: var(--content_p1) !important;
