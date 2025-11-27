@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.08.1
+// @version      1.09.0
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -159,6 +159,8 @@ Version
         - History fetching error background
         - Hover on segment restriction table
         - Waze Edit Count Session History
+1.09.0 - Fixed -
+		- Clicksaver road type chip border color override in compact mode
 
 */
 
@@ -169,8 +171,8 @@ Version
 /* When you click buttons, they still go white */
 
 (function main() {
-  'use strict';
-  const updateMessage = 'Fixed -<br>- Closure panel post WME update. <br> - History fetching error background. <br>- Hover on segment restriction table. <br>- Waze Edit Count Session History. <br>';
+  ('use strict');
+  const updateMessage = 'Fixed -<br>- Clicksaver road type chip border color override in compact mode <br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
   const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -1949,7 +1951,37 @@ Version
     childList: true,
     subtree: true,
   });
+	
+// -----------------------------------------for the clicksaver road type chip border color override in compact mode -------------------------------------------
+  // Override road type chip border color from black to red
+  function setBorderOnCheckedChips() {
+    // Only apply if dark mode is active
+    if (document.documentElement.getAttribute('wz-theme') === 'dark') {
+      document.querySelectorAll('wz-checkable-chip.cs-compact-button[checked]').forEach((chip) => {
+        if (chip.shadowRoot) {
+          const div = chip.shadowRoot.querySelector('div');
+          if (div) {
+            div.style.setProperty('border', '2px solid #00ff15ff', 'important');
+          }
+        }
+      });
+    }
+  }
 
+  // Run once after page load (delay to let other scripts finish)
+  setTimeout(setBorderOnCheckedChips, 500);
+
+  // Observe for changes and re-apply as needed
+  const Chipobserver = new MutationObserver(() => {
+    // Only run if dark mode is active
+    if (document.documentElement.getAttribute('wz-theme') === 'dark') {
+      requestAnimationFrame(setBorderOnCheckedChips);
+    }
+  });
+  Chipobserver.observe(document.body, { childList: true, subtree: true });
+
+// -----------------------------------------for the clicksaver road type chip border color override in compact mode -------------------------------------------
+	
   function sandboxBootstrap() {
     if (WazeWrap?.Ready) {
       bootstrap({
