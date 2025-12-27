@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.09.0
+// @version      1.09.1
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -13,8 +13,7 @@
 // @grant        GM_addValueChangeListener
 // @grant        GM_xmlhttpRequest
 // @connect      greasyfork.org
-// @require      https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
-// @require      https://update.greasyfork.org/scripts/509664/WME%20Utils%20-%20Bootstrap.js
+// @require      https://greasyfork.org/scripts/560385/code/WazeToastr.js
 // @license      MIT
 // @downloadURL https://update.greasyfork.org/scripts/529939/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js
 // @updateURL https://update.greasyfork.org/scripts/529939/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.meta.js
@@ -161,21 +160,23 @@ Version
         - Waze Edit Count Session History
 1.09.0 - Fixed -
 		- Clicksaver road type chip border color override in compact mode
+1.09.1 - Fixed - Temporary fix for alerts not displaying properly.
 
 */
 
 /* global W */
-/* global WazeWrap */
+/* global WazeToastr */
 
 /* TODO */
 /* When you click buttons, they still go white */
 
 (function main() {
   ('use strict');
-  const updateMessage = 'Fixed -<br>- Clicksaver road type chip border color override in compact mode <br>';
+  const updateMessage = '<strong>Fixed :</strong><br> - Temporary fix for alerts not displaying properly.';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
-  const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
+	const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
+	const forumURL = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/feedback';
   let profileTries = 0;
   let settingsTries = 0;
   // Currently it is 60 retries (seconds) since we can only add this after a user is
@@ -939,6 +940,12 @@ Version
 			[wz-theme="dark"] #WWSU-Container,
 			[wz-theme="dark"] .WWSU-script-item,
 			[wz-theme="dark"] #WWSU-script-update-info {
+				background-color: var(--background_default) !important;
+			}
+    /* Script update message */
+			[wz-theme="dark"] #WTSU-Container,
+			[wz-theme="dark"] .WTSU-script-item,
+			[wz-theme="dark"] #WTSU-script-update-info {
 				background-color: var(--background_default) !important;
 			}
 
@@ -1834,7 +1841,7 @@ Version
         `FUME UI Enhancements detected with contrast enhancements set to ` + `${FUMEuiContrast.options[FUMEuiContrast.selectedIndex].text}. Please ` + `set 'contrast enhancement' to 'none' to make WME Dark Mode work correctly.`;
       // Use a long timeout to make sure the user acknowledges this message
       // since it does break the plugin if not fixed.
-      WazeWrap.Alerts.info('Dark Mode - FUME UI Contrast Warning', fumeWarningMessage, false, false, 60000);
+      WazeToastr.Alerts.info('Dark Mode - FUME UI Contrast Warning', fumeWarningMessage, false, false, 60000);
     }
   }
 
@@ -1876,7 +1883,7 @@ Version
       /* Bootstrap does not exist on the profile page */
       const profileRegex = new RegExp('.*://.*.waze.com/.*user.*');
       if (!profileRegex.test(window.location.href)) {
-        await bootstrap({ scriptUpdateMonitor: { downloadUrl } });
+		await WazeToastr.Ready;
       }
     }
   }
@@ -1982,20 +1989,19 @@ Version
 
 // -----------------------------------------for the clicksaver road type chip border color override in compact mode -------------------------------------------
 	
-  function sandboxBootstrap() {
-    if (WazeWrap?.Ready) {
-      bootstrap({
-        scriptUpdateMonitor: { downloadUrl },
-      });
-      init();
-      WazeWrap.Interface.ShowScriptUpdate(scriptName, scriptVersion, updateMessage);
-    } else {
-      setTimeout(sandboxBootstrap, 250);
-    }
-  }
+    function scriptupdatemonitor() {
+      if (WazeToastr?.Ready) {
+        // Create and start the ScriptUpdateMonitor
+        const updateMonitor = new WazeToastr.Alerts.ScriptUpdateMonitor(scriptName, scriptVersion, downloadUrl, GM_xmlhttpRequest);
+        updateMonitor.start(2, true); // Check every 2 hours, check immediately
 
-  // Start the "sandboxed" code.
-  sandboxBootstrap();
+        // Show the update dialog for the current version
+        WazeToastr.Interface.ShowScriptUpdate(scriptName, scriptVersion, updateMessage, downloadUrl, forumURL);
+      } else {
+        setTimeout(scriptupdatemonitor, 250);
+      }
+    }
+    scriptupdatemonitor();
 
   console.log(`${scriptName} initialized.`);
 })();
