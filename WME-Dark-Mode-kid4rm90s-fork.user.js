@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.09.2
+// @version      1.10
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -161,7 +161,7 @@ Version
 1.09.0 - Fixed -
 		- Clicksaver road type chip border color override in compact mode
 1.09.1 - Fixed - Temporary fix for alerts not displaying properly.
-1.09.2 - Fixed - 
+1.10 - Fixed - 
 		- Fixed for visual + towards instruction icons in turn instructions panel
 		- Fixed for URC-E comment box close button color
 		- Fixed for WME Bookmarks
@@ -1332,12 +1332,12 @@ Version
 			}
 			
 	/*********** WME FUME *************************************/
-	[wz-theme="dark"] .yslider-stops,
-	[wz-theme="dark"] .olButton,
-	[wz-theme="dark"] .olControlPanZoomBar,
-	[wz-theme="dark"] .slider {
-	background-color: var(--background_default) !important;
-	}
+			[wz-theme="dark"] .yslider-stops,
+			[wz-theme="dark"] .olButton,
+			[wz-theme="dark"] .olControlPanZoomBar,
+			[wz-theme="dark"] .slider {
+			background-color: var(--background_default) !important;
+			}
 	
     /* I am not 100% positive this was the FUME update box */
 			[wz-theme="dark"] #abAlerts {
@@ -1904,13 +1904,15 @@ Version
 
       // Get the wz-button by its ID
       lightButton = document.getElementById('button_light_theme');
-      darkButton  = document.getElementById('button_dark_theme');
-      autoButton  = document.getElementById('button_auto_theme');
+      darkButton = document.getElementById('button_dark_theme');
+      autoButton = document.getElementById('button_auto_theme');
 
       lightButton.addEventListener('click', changeToLight);
       darkButton.addEventListener('click', changeToDark);
-      autoButton.addEventListener('click', changeToAuto);
-
+		autoButton.addEventListener('click', changeToAuto);
+		
+      // We technically call updateUI() twice since it is called per toggle option,
+      // but repeatedly calling this function is harmless.
       updateUI();
     } else {
       console.log('Form div with class "settings__form" not found.');
@@ -1934,7 +1936,7 @@ Version
 
   function addThemeToggleButtons() {
     addProfileToggle();
-     observeSettingsUI();
+    observeSettingsUI();
     addSettingsToggle();
   }
 
