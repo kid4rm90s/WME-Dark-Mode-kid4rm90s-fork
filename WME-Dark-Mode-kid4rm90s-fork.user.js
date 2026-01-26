@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.11.3
+// @version      1.11.4
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -1759,11 +1759,11 @@ Version
 				color: var(--content_p1) !important;
 			}
 
-			[wz-theme="dark"] td:hover {
+			[wz-theme="dark"] .bs-calendar-popup table td:hover {
 				background: var(--always_dark_inactive) !important;
 			}
 
-			[wz-theme="dark"] th {
+			[wz-theme="dark"] .bs-calendar-popup table th {
 				color: var(--content_p1) !important;
 			}
 			/* Targets the Date (First span) */
