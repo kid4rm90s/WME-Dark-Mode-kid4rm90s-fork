@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.11.5
+// @version      1.11.6
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -174,6 +174,8 @@ Version
 1.11.5 - Fixed - 
 		- Fixed for WME PIE script compatibility
 		- Fixed for WME AD to BS Calendar pop-up (forgot to add some CSS in 1.11.1)
+		1.11.6 - Fixed - 
+		- Fixed for WME PIE script compatibility for pie resize and rotate buttons
 */
 
 /* global W */
@@ -184,7 +186,7 @@ Version
 
 (function main() {
   ('use strict');
-  const updateMessage = '<strong>Fixed :</strong><br> - Fixed for WME PIE script compatibility,<br>- Fixed for WME AD to BS Calendar pop-up (forgot to add some CSS in 1.11.4)<br>';
+  const updateMessage = '<strong>Fixed :</strong><br> - Fixed for WME PIE script compatibility for pie resize and rotate buttons<br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
 	const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -1584,6 +1586,10 @@ Version
 
 			[wz-theme="dark"] #pieViewEditGeom {
 			background-color: var(--background_default) !important;
+			}
+			[wz-theme="dark"] #pierotate,
+			[wz-theme="dark"] #pieresize {
+			color: var(--content_p1) !important;
 			}
 
 
