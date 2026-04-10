@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.11.6
+// @version      1.11.7
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -176,6 +176,10 @@ Version
 		- Fixed for WME AD to BS Calendar pop-up (forgot to add some CSS in 1.11.1)
 		1.11.6 - Fixed - 
 		- Fixed for WME PIE script compatibility for pie resize and rotate buttons
+1.11.7 - Fixed -
+		- Fixed for E50 Geometry Information Script dark mode compatibility
+		- Added support for E85 Street Geometry Script
+		- Added support for E95 Script
 */
 
 /* global W */
@@ -186,7 +190,7 @@ Version
 
 (function main() {
   ('use strict');
-  const updateMessage = '<strong>Fixed :</strong><br> - Fixed for WME PIE script compatibility for pie resize and rotate buttons<br>';
+  const updateMessage = '<strong>Fixed :</strong><br> - Fixed for E50 Geometry Information Script dark mode compatibility<br><strong>Added :</strong><br> - Added support for E85 Street Geometry Script<br> - Added support for E95 Script';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
 	const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -1381,12 +1385,16 @@ Version
 			}
 
 /******E50 Geometry information Script ********************************************/
+			[wz-theme="dark"] .wme-ui-modal.e50 li a.nonumber:hover,
 			[wz-theme="dark"] .e50 fieldset legend,
 			[wz-theme="dark"] .e50 li a:hover,
 			[wz-theme="dark"] .e50 li a.noaddress:hover {
 				background-color: var(--always_dark_surface_default) !important;
 			}
 
+			[wz-theme="dark"] .wme-ui-modal,
+			[wz-theme="dark"] .wme-ui-modal-close,
+			[wz-theme="dark"] .wme-ui-modal.e50 li a.nonumber,
 			[wz-theme="dark"] .wme-ui-panel-container,
 			[wz-theme="dark"] .wme-ui-close-panel,
 			[wz-theme="dark"] .e50 li a.noaddress,
@@ -1405,7 +1413,17 @@ Version
     [wz-theme="dark"] .controls-container.e50 input {
     color: var(--content_p2) !important;  /*color overrided*/
     }
-	
+
+/******E85 Street Geometry ********************************************/
+			[wz-theme="dark"] .wme-ui-fieldset-legend {
+				background-color: var(--always_dark_surface_default) !important;
+			}
+
+/******E95  ********************************************/
+			[wz-theme="dark"] .e95 .wme-ui-fieldset-content p {
+				color: var(--content_p2) !important;
+				}
+
 /**********************Address Point Helper*****************************/
 			[wz-theme="dark"] .waze-btn.waze-btn-white {
 				background-color: var(--background_default) !important;
