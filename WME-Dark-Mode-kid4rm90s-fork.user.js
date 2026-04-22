@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.11.7
+// @version      1.11.8
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -180,6 +180,8 @@ Version
 		- Fixed for E50 Geometry Information Script dark mode compatibility
 		- Added support for E85 Street Geometry Script
 		- Added support for E95 Script
+1.11.8 - Fixed -
+		- Added WME Easy Storage Manager dark theme support
 */
 
 /* global W */
@@ -190,7 +192,7 @@ Version
 
 (function main() {
   ('use strict');
-  const updateMessage = '<strong>Fixed :</strong><br> - Fixed for E50 Geometry Information Script dark mode compatibility<br><strong>Added :</strong><br> - Added support for E85 Street Geometry Script<br> - Added support for E95 Script';
+  const updateMessage = '<strong>Fixed :</strong><br> - Fixed for E50 Geometry Information Script dark mode compatibility<br><strong>Added :</strong><br><br> - Added WME Easy Storage Manager dark theme support';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
 	const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -1808,6 +1810,79 @@ Version
 			/* Targets the Time (Second span) */
 			[wz-theme="dark"] #wme-ad-bs-today span:nth-of-type(2) {
 				color: #00ffcc !important; /* Example: Teal */
+			}
+
+/*********** WME Easy Storage Manager *******************************************/
+			/* Help panel card backgrounds and all descendant divs */
+			[wz-theme="dark"] #esm-dropbox-help-panel div,
+			[wz-theme="dark"] #esm-gdrive-help-panel div {
+				background: var(--background_default) !important;
+				color: var(--content_p1) !important;
+				border-color: var(--hairline) !important;
+			}
+
+			/* Token input field */
+			[wz-theme="dark"] #esm-dropbox-token-input {
+				background: var(--surface_default) !important;
+				color: var(--content_p1) !important;
+				border-color: var(--hairline) !important;
+			}
+
+			/* Status text in help panels */
+			[wz-theme="dark"] #esm-dropbox-token-status,
+			[wz-theme="dark"] #esm-gdrive-status {
+				color: var(--content_p2) !important;
+			}
+
+			/* Hide/show toggle and Google login button (exclude red/green action buttons) */
+			[wz-theme="dark"] #esm-dropbox-help-panel button:not(#esm-dropbox-token-save):not(#esm-dropbox-token-clear),
+			[wz-theme="dark"] #esm-gdrive-help-panel button:not([style*="ef4444"]) {
+				background: var(--surface_default) !important;
+				color: var(--content_p1) !important;
+				border-color: var(--hairline) !important;
+				box-shadow: none !important;
+			}
+
+			/* Auto-save section */
+			[wz-theme="dark"] #esm-autosave-section {
+				background: var(--surface_default) !important;
+				border-color: var(--hairline) !important;
+				color: var(--content_p1) !important;
+			}
+
+			[wz-theme="dark"] #esm-autosave-section label,
+			[wz-theme="dark"] #esm-autosave-section span {
+				color: var(--content_p1) !important;
+			}
+
+			[wz-theme="dark"] #esm-autosave-interval,
+			[wz-theme="dark"] #esm-autosave-target {
+				background: var(--background_default) !important;
+				color: var(--content_p1) !important;
+				border-color: var(--hairline) !important;
+			}
+
+			/* Key list container (import/restore checkboxes) */
+			[wz-theme="dark"] #key-list-container {
+				background: var(--surface_default) !important;
+				color: var(--content_p1) !important;
+				border-color: var(--hairline) !important;
+			}
+
+			[wz-theme="dark"] #key-list-container label {
+				color: var(--content_p1) !important;
+			}
+
+			/* WazeWrap tab text */
+			[wz-theme="dark"] #esm-tab,
+			[wz-theme="dark"] #esm-tab p,
+			[wz-theme="dark"] #esm-title {
+				color: var(--content_p1) !important;
+			}
+
+			/* W.userscripts sidebar tab text */
+			[wz-theme="dark"] #easy-storage-manager-tab p {
+				color: var(--content_p1) !important;
 			}
 
 			`;
