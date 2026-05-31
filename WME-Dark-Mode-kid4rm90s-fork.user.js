@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.11.8
+// @version      1.12.0
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -182,6 +182,8 @@ Version
 		- Added support for E95 Script
 1.11.8 - Fixed -
 		- Added WME Easy Storage Manager dark theme support
+1.11.9 - Fixed -
+		- Now the EV charger icons will have a filter applied to them in dark mode to make them more visible.
 */
 
 /* global W */
@@ -192,30 +194,27 @@ Version
 
 (function main() {
   ('use strict');
-  const updateMessage = '<strong>Fixed :</strong><br> - Fixed for E50 Geometry Information Script dark mode compatibility<br><strong>Added :</strong><br><br> - Added WME Easy Storage Manager dark theme support';
+	const updateMessage = '<strong>Fixed :</strong><br> - Now the EV charger icons will have a filter applied to them in dark mode to make them more visible.<br><br> - Added Theme toggle below Settings icon <br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
 	const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
 	const forumURL = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/feedback';
   let profileTries = 0;
-  let settingsTries = 0;
   // Currently it is 60 retries (seconds) since we can only add this after a user is
   // logged in. Change this in the future to be smarter. The quick check is lightweight
   // so it should not bog anything down.
   let maxUIRetries = 60;
 
-  var lightButton;
-  var darkButton;
-  var autoButton;
+  let navbarThemeTries = 0;
+  let navbarThemeTimeoutId = null;
+  let navbarThemeButton = null;
 
   var darkModeSwitch;
 
   // Store references for cleanup
   let mainObserver = null;
   let chipObserver = null;
-  let settingsObserver = null;
   let profileTimeoutId = null;
-  let settingsTimeoutId = null;
   const themeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
   const themeAbortController = new AbortController();
   let styleInjected = false;
@@ -225,19 +224,8 @@ Version
     const theme = getPreferredTheme();
     let currAuto = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Dark' : 'Light';
 
-    // Let's make sure that the buttons were made.
-    // Since they are made together, we just check that
-    // one is not null
-    if (lightButton) {
-      lightButton.value = theme == 'light' ? 'true' : 'false';
-      darkButton.value = theme == 'dark' ? 'true' : 'false';
-      autoButton.value = theme == 'auto' ? 'true' : 'false';
-
-      lightButton.color = theme == 'light' ? 'primary' : 'secondary';
-      darkButton.color = theme == 'dark' ? 'primary' : 'secondary';
-      autoButton.color = theme == 'auto' ? 'primary' : 'secondary';
-
-      autoButton.textContent = `Auto (${currAuto})`;
+    if (navbarThemeButton) {
+      navbarThemeButton.textContent = theme !== 'light' ? 'Light' : 'Dark';
     }
 
     if (darkModeSwitch) {
@@ -289,6 +277,7 @@ Version
     if (!discussRegex.test(window.location.href)) {
       updateUI();
       setTheme();
+      scheduleEVChargerFilter();
     }
   });
 
@@ -299,6 +288,7 @@ Version
     if (!discussRegex.test(window.location.href)) {
       updateUI();
       setTheme();
+      scheduleEVChargerFilter();
     }
   }, { signal: themeAbortController.signal });
 
@@ -1885,6 +1875,9 @@ Version
 				color: var(--content_p1) !important;
 			}
 
+/*********** WME EV Chargers plug color *******************************************/
+			/* Applied via JS (CSS injected into wz-autocomplete shadow root) - see scheduleEVChargerFilter() */
+
 			`;
 
   // This CSS block cannot be part of the 'theme' because the base pallete
@@ -1994,93 +1987,58 @@ Version
     updateUI();
   }
 
-  function addSettingsToggle() {
-    let settingsDiv = document.querySelector('.settings');
+  // Add a Dark/Light toggle button to the nav bar, directly after the
+  // container element that holds the settings icon.
+  function addNavbarThemeButton() {
+    // Target the settings nav item directly by its known data-for attribute
+    const navItem = document.querySelector('wz-navigation-item[data-for="prefs"]');
 
-    if (!settingsDiv && settingsTries <= maxUIRetries) {
-      settingsTimeoutId = setTimeout(() => addSettingsToggle(), 1000);
-      settingsTries++;
+    if (!navItem) {
+      if (navbarThemeTries <= maxUIRetries) {
+        navbarThemeTries++;
+        navbarThemeTimeoutId = setTimeout(addNavbarThemeButton, 1000);
+      } else {
+        console.log('WME Dark Mode: settings nav item not found.');
+        navbarThemeTries = 0;
+      }
       return;
     }
 
-    if (!settingsDiv) {
-      console.log('Settings div with class "settings" not found.');
-      settingsTries = 0;
-      return;
+    if (navbarThemeTimeoutId) {
+      clearTimeout(navbarThemeTimeoutId);
+      navbarThemeTimeoutId = null;
     }
 
-    // Clear timeout since we found the element
-    if (settingsTimeoutId) {
-      clearTimeout(settingsTimeoutId);
-      settingsTimeoutId = null;
-    }
+    // Prevent duplicate injection
+    if (document.getElementById('wme-navbar-theme-btn')) return;
 
-    const formDiv = settingsDiv.querySelector('.settings__form');
+    // Wrap in a flex div so the button centers the same way the nav items do
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display: flex; justify-content: center; align-items: center; padding: 4px 0;';
 
-    if (formDiv) {
-      // Prevent duplicate injection
-      if (formDiv.querySelector('.theme-select')) return;
+    const btn = document.createElement('wz-button');
+    btn.id    = 'wme-navbar-theme-btn';
+    btn.setAttribute('size', 'sm');
+    btn.setAttribute('color', 'secondary');
 
-      const newDiv = document.createElement('div');
-      newDiv.classList.add('settings__form-group', 'dark-mode');
+    wrapper.appendChild(btn);
+    navItem.insertAdjacentElement('afterend', wrapper);
+    navbarThemeButton = btn;
 
-      const modeSelectionHTML = `
-		<div class="theme-select">
-			<wz-label class="themes-select__label" html-for="">
-				Color Theme
-			</wz-label>
-			<wz-button id="button_light_theme" color="primary" size="sm" value="">
-				Light
-			</wz-button>
-			<wz-button id="button_dark_theme" color="secondary" size="sm" value="">
-				Dark
-			</wz-button>
-			<wz-button id="button_auto_theme" color="secondary" size="sm" value="">
-				Auto (Dark)
-			</wz-button>
-		</div>
-		 `;
-
-      newDiv.innerHTML = modeSelectionHTML;
-
-      formDiv.appendChild(newDiv);
-
-      // Get the wz-button by its ID
-      lightButton = document.getElementById('button_light_theme');
-      darkButton = document.getElementById('button_dark_theme');
-      autoButton = document.getElementById('button_auto_theme');
-
-      lightButton.addEventListener('click', changeToLight);
-      darkButton.addEventListener('click', changeToDark);
-		autoButton.addEventListener('click', changeToAuto);
-		
-      // We technically call updateUI() twice since it is called per toggle option,
-      // but repeatedly calling this function is harmless.
-      updateUI();
-    } /*else {
-      console.log('Form div with class "settings__form" not found.');
-    }*/
-  }
-
-  // MutationObserver integration for settings UI
-  function observeSettingsUI() {
-    const target = document.body;
-    if (!target) return;
-    if (settingsObserver) return; // Prevent duplicate observers
-    settingsObserver = new MutationObserver(() => {
-      const settingsDiv = document.querySelector('.settings');
-      if (settingsDiv) {
-        addSettingsToggle();
-        // Keep observer running since settings panel is dynamically added/removed
+    navbarThemeButton.addEventListener('click', () => {
+      if (getPreferredTheme() === 'light') {
+        changeToDark();
+      } else {
+        changeToLight();
       }
     });
-    settingsObserver.observe(target, { childList: true, subtree: true });
+
+    updateUI();
   }
 
   function addThemeToggleButtons() {
     addProfileToggle();
-    observeSettingsUI();
-    addSettingsToggle();
+    addNavbarThemeButton();
   }
 
   function FUMECheck() {
@@ -2197,6 +2155,10 @@ Version
                 shadowRoot.appendChild(style);
               }
             }
+
+            // EV Charger plug images: schedule the filter via debounce so we
+            // don't run it on every individual added node.
+            scheduleEVChargerFilter();
           }
         });
       }
@@ -2208,7 +2170,87 @@ Version
     childList: true,
     subtree: true
   });
-	
+
+// -----------------------------------------for the EV Charger plug image invert filter (shadow DOM) -------------------------------------------
+  // The plug-types-control only exists while the Chargers tab is open on a
+  // charging-station venue.  External CSS cannot cross shadow DOM boundaries,
+  // so we inject a <style> directly into wz-autocomplete's shadow root.
+  const EV_STYLE_ID  = 'wme-ev-charger-img-filter';
+  const EV_STYLE_CSS = '.wz-autocomplete-item img, .autocomplete-sub-menu img { filter: invert(1) !important; }';
+
+  let _evChargerAutocomplete = null; // cached element reference
+  let _evStyleInjected       = false; // true once <style> is in the shadow root
+  let _evLastSearchTime      = 0;    // throttle expensive shadow traversal
+  let _evDebounceTimer       = null; // debounce handle for mainObserver calls
+  const EV_SEARCH_COOLDOWN   = 500; // ms between full shadow-DOM searches
+
+  // Called from mainObserver on every added node – debounced so the real work
+  // only fires once after a burst of mutations settles (typically < 50 ms).
+  function scheduleEVChargerFilter() {
+    // Fast exit: style already injected and element still in the DOM.
+    if (_evStyleInjected && _evChargerAutocomplete && _evChargerAutocomplete.isConnected) return;
+    if (_evDebounceTimer) return;
+    _evDebounceTimer = setTimeout(() => {
+      _evDebounceTimer = null;
+      applyEVChargerImageFilter();
+    }, 150);
+  }
+
+  function getEVChargerShadowRoot() {
+    // Fast path: reuse cached reference while it is still in the DOM
+    if (_evChargerAutocomplete && _evChargerAutocomplete.isConnected) {
+      return _evChargerAutocomplete.shadowRoot;
+    }
+    _evChargerAutocomplete = null;
+    _evStyleInjected       = false; // element gone, reset flag
+
+    // Throttle the expensive recursive search to once per second
+    const now = Date.now();
+    if (now - _evLastSearchTime < EV_SEARCH_COOLDOWN) return null;
+    _evLastSearchTime = now;
+
+    // Try the light-DOM fast path first
+    _evChargerAutocomplete = document.querySelector(
+      '.wz-multiselect.plug-types-control wz-autocomplete'
+    );
+    if (_evChargerAutocomplete) return _evChargerAutocomplete.shadowRoot;
+
+    // Recursively search inside every shadow root on the page
+    function searchShadow(root) {
+      try {
+        const hit = root.querySelector(
+          '.wz-multiselect.plug-types-control wz-autocomplete'
+        );
+        if (hit) return hit;
+        for (const el of root.querySelectorAll('*')) {
+          if (el.shadowRoot) {
+            const result = searchShadow(el.shadowRoot);
+            if (result) return result;
+          }
+        }
+      } catch (e) { /* skip inaccessible shadow roots */ }
+      return null;
+    }
+
+    _evChargerAutocomplete = searchShadow(document);
+    return _evChargerAutocomplete ? _evChargerAutocomplete.shadowRoot : null;
+  }
+
+  function applyEVChargerImageFilter() {
+    if (document.documentElement.getAttribute('wz-theme') !== 'dark') return;
+    const shadowRoot = getEVChargerShadowRoot();
+    if (!shadowRoot) return;
+
+    if (!shadowRoot.getElementById(EV_STYLE_ID)) {
+      const style       = document.createElement('style');
+      style.id          = EV_STYLE_ID;
+      style.textContent = EV_STYLE_CSS;
+      shadowRoot.appendChild(style);
+      _evStyleInjected = true;
+    }
+  }
+// -----------------------------------------for the EV Charger plug image invert filter (shadow DOM) -------------------------------------------
+
 // -----------------------------------------for the clicksaver road type chip border color override in compact mode -------------------------------------------
   // Override road type chip border color from black to red
   function setBorderOnCheckedChips() {
@@ -2259,9 +2301,8 @@ Version
   window.addEventListener('beforeunload', () => {
     if (mainObserver) mainObserver.disconnect();
     if (chipObserver) chipObserver.disconnect();
-    if (settingsObserver) settingsObserver.disconnect();
     if (profileTimeoutId) clearTimeout(profileTimeoutId);
-    if (settingsTimeoutId) clearTimeout(settingsTimeoutId);
+    if (navbarThemeTimeoutId) clearTimeout(navbarThemeTimeoutId);
     themeAbortController.abort();
   });
 
