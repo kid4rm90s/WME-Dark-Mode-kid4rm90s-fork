@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.12.0
+// @version      1.12.1
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -184,6 +184,10 @@ Version
 		- Added WME Easy Storage Manager dark theme support
 1.11.9 - Fixed -
 		- Now the EV charger icons will have a filter applied to them in dark mode to make them more visible.
+1.12.0 - Fixed -
+		- Added Theme toggle below Settings icon
+1.12.1 - Fixed -
+		- Fixed for Lane Tools delete lane buttons not being visible in dark mode
 */
 
 /* global W */
@@ -194,7 +198,7 @@ Version
 
 (function main() {
   ('use strict');
-	const updateMessage = '<strong>Fixed :</strong><br> - Now the EV charger icons will have a filter applied to them in dark mode to make them more visible.<br><br> - Added Theme toggle below Settings icon <br>';
+	const updateMessage = '<strong>Fixed :</strong><br> - Fixed for Lane Tools delete lane buttons not being visible in dark mode <br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
 	const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -632,6 +636,11 @@ Version
 
             [wz-theme="dark"] .turn-angle-icon:after {
                 filter: invert(1);
+            }
+
+			[wz-theme="dark"] #li-del-rev-btn,
+			[wz-theme="dark"] #li-del-fwd-btn {
+                background-color: var(--always_dark_surface_default) !important;
             }
 
 /************************* WME Nav History **********************************************************/
@@ -2014,7 +2023,7 @@ Version
 
     // Wrap in a flex div so the button centers the same way the nav items do
     const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'display: flex; justify-content: center; align-items: center; padding: 4px 0;';
+    wrapper.style.cssText = 'display: flex; justify-content: center; align-items: center; padding-top: 12px; padding-bottom: 12px; height: auto;';
 
     const btn = document.createElement('wz-button');
     btn.id    = 'wme-navbar-theme-btn';
