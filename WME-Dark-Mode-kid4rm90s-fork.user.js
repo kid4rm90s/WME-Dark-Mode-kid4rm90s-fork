@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.12.2
+// @version      1.12.3
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -188,7 +188,7 @@ Version
 		- Added Theme toggle below Settings icon
 1.12.1 - Fixed -
 		- Fixed for Lane Tools delete lane buttons not being visible in dark mode
-1.12.2 - Fixed -
+1.12.3 - Fixed -
 		- WME/Google Places dropdown icon is now visible in dark mode by querying it for the clear-icon icon button and recoloring it white
 */
 
@@ -2268,13 +2268,15 @@ Version
   }
 // -----------------------------------------for the EV Charger plug image invert filter (shadow DOM) -------------------------------------------
 
-// -----------------------------------------for the clear-icon icon button white color (nested shadow DOM) -------------------------------------------
-  // Document-scope CSS cannot cross shadow DOM boundaries, and the <wz-button>
-  // with a clear-icon button is frequently nested inside OTHER components'
-  // shadow roots.  A plain document.querySelector() returns null for it, so we
-  // must walk every shadow root recursively until we find the host <wz-button>.
-  // The icon's svg path lives in the light DOM as a direct child of the host
-  // wz-button, so once we hold the host we can recolor it directly.
+// -----------------------------------------for the clear-icon icon button white color (venue / Google place selection) -------
+  // The clear/dropdown icon only exists while a place is selected, in the header
+  // row of the selection panel, e.g.
+  //   <wz-section-header class="venue-panel-header" data-testid="panel-section-header" headline="1 place selected" ...>
+  //   <wz-section-header data-testid="panel-section-header" headline="1 Google place selected" ...>
+  // So instead of scanning the whole page + every shadow root, we only walk the
+  // small container that holds that header.  The <wz-button color="clear-icon">
+  // is inside a nested component, so we still recurse its shadow roots - but
+  // scoped to this one panel only (cheap), not the entire document.
   //
   // IMPORTANT: we must NOT permanently mutate the path's fill attribute, or the
   // white color would stick when the user switches back to light mode while a
@@ -2299,34 +2301,60 @@ Version
   // Colors every svg path in the light DOM directly under the host wz-button,
   // remembering the original 'fill' so it can be restored later.  Pass
   // targetFill = '#ffffff' (dark) or a falsy value to restore the original.
+  // Only touches the DOM when the current fill actually differs, so repeated
+  // passes over an already-correct icon cause no redundant writes/relayout.
   function paintClearIcon(host, targetFill) {
     host.querySelectorAll('svg path').forEach((p) => {
+      const current = p.getAttribute('fill');
       if (!_clearIconOrigFills.has(p)) {
         // Record the ORIGINAL fill once (attribute may be absent -> null).
-        _clearIconOrigFills.set(p, p.getAttribute('fill'));
+        _clearIconOrigFills.set(p, current);
       }
+      // Compute the desired fill for this theme.
+      let desired;
       if (targetFill) {
-        p.setAttribute('fill', targetFill);
+        desired = targetFill;
       } else {
-        // Restore: put the original back if there was one, otherwise remove
-        // the attribute so the icon uses its natural/inherited color again.
-        const original = _clearIconOrigFills.get(p);
-        if (original) {
-          p.setAttribute('fill', original);
-        } else {
-          p.removeAttribute('fill');
-        }
+        desired = _clearIconOrigFills.get(p); // may be null -> means "remove attr"
+      }
+      // Skip if the element is already in the desired state.
+      if (current === desired) return;
+      if (desired) {
+        p.setAttribute('fill', desired);
+      } else {
+        p.removeAttribute('fill');
       }
     });
   }
 
+  // Find the selection-panel header(s) that indicate a place is selected.
+  // The icon sits in the same header row as this element, so we scope the walk
+  // to the header's parent container (covers the header and any sibling that
+  // carries the clear-icon button).  Falls back to the header itself.
+  function getSelectedHeaderScopes() {
+    const headers = document.querySelectorAll(
+      'wz-section-header[data-testid="panel-section-header"]'
+    );
+    const scopes = [];
+    const seenScope = new Set();
+    headers.forEach((h) => {
+      const scope = h.parentElement || h;
+      if (!seenScope.has(scope)) {
+        seenScope.add(scope);
+        scopes.push(scope);
+      }
+    });
+    return scopes;
+  }
+
   function applyClearIconColorFix() {
-    // Recolor based on the CURRENT theme instead of bailing out of light mode,
-    // so switching themes while a POI stays selected restores the icon color.
+    // Recolor based on the CURRENT theme so switching themes while a POI stays
+    // selected restores the icon color when going back to light mode.
     const isDark = document.documentElement.getAttribute('wz-theme') === 'dark';
 
-    // Walk the top document AND every nested open shadow root recursively so we
-    // find host wz-buttons that are themselves buried in deeper shadow roots.
+    const scopes = getSelectedHeaderScopes();
+    if (!scopes.length) return; // nothing selected -> no clear-icon icon present
+
     const seen = new Set();
     const walkAndPaint = (scope) => {
       scope.querySelectorAll('wz-button').forEach((host) => {
@@ -2340,11 +2368,11 @@ Version
         }
       });
     };
-    walkAndPaint(document);
+    scopes.forEach(walkAndPaint);
   }
 
-  // Debounced scheduler so the expensive recursive walk only runs once after a
-  // burst of DOM mutations (dropdowns render their buttons on open).
+  // Debounced scheduler so we only run once after a burst of DOM mutations
+  // (the selection panel renders its header/button when a place is opened).
   let _clearIconTimer = null;
   function scheduleClearIconFix() {
     if (_clearIconTimer) return;
@@ -2354,9 +2382,9 @@ Version
     }, 150);
   }
 
-  // Initial pass after styles/theme are applied (buttons may already exist).
+  // Initial pass after styles/theme are applied (a place may already be open).
   setTimeout(applyClearIconColorFix, 500);
-// -----------------------------------------for the clear-icon icon button white color (nested shadow DOM) -------------------------------------------
+// -----------------------------------------for the clear-icon icon button white color (venue / Google place selection) -------
 
 // -----------------------------------------for the clicksaver road type chip border color override in compact mode -------------------------------------------
   // Override road type chip border color from black to red
