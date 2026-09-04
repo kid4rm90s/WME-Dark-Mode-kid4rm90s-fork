@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.12.1
+// @version      1.12.2
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -188,6 +188,8 @@ Version
 		- Added Theme toggle below Settings icon
 1.12.1 - Fixed -
 		- Fixed for Lane Tools delete lane buttons not being visible in dark mode
+1.12.2 - Fixed -
+		- WME/Google Places dropdown icon is now visible in dark mode by querying it for the clear-icon icon button and recoloring it white
 */
 
 /* global W */
@@ -198,7 +200,7 @@ Version
 
 (function main() {
   ('use strict');
-	const updateMessage = '<strong>Fixed :</strong><br> - Fixed for Lane Tools delete lane buttons not being visible in dark mode <br>';
+	const updateMessage = '<strong>Fixed :</strong><br> - WME/Google Places dropdown icon is now visible in dark mode (recolored to white) <br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
 	const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -282,6 +284,7 @@ Version
       updateUI();
       setTheme();
       scheduleEVChargerFilter();
+      scheduleClearIconFix();
     }
   });
 
@@ -293,6 +296,7 @@ Version
       updateUI();
       setTheme();
       scheduleEVChargerFilter();
+      scheduleClearIconFix();
     }
   }, { signal: themeAbortController.signal });
 
@@ -1983,7 +1987,7 @@ Version
 
     let darkModeMenuItem  = document.createElement('wz-menu-item');
 
-    darkModeMenuItem.style     = 'pointer-events: none; border-bottom: 1px solid var(--separator_default, #e8eaed);';
+    darkModeMenuItem.style = 'pointer-events: none; border-bottom: 1px solid var(--separator_default, #e8eaed);';
     darkModeMenuItem.innerHTML = `<wz-toggle-switch style="pointer-events: all;" checked="true" tabindex="0" name="wmeDarkMode" id="wme-dark-mode_switch">Dark Mode<input type="checkbox" name="wmeDarkMode" value="" style="display: none; visibility: hidden;"></wz-toggle-switch>`;
 
     userBox.insertBefore(darkModeMenuItem, wzMenuItem);
@@ -2168,6 +2172,10 @@ Version
             // EV Charger plug images: schedule the filter via debounce so we
             // don't run it on every individual added node.
             scheduleEVChargerFilter();
+
+            // clear-icon icon buttons may be nested in shadow roots that are
+            // only added when a dropdown opens; re-apply the white icon fix.
+            scheduleClearIconFix();
           }
         });
       }
@@ -2259,6 +2267,96 @@ Version
     }
   }
 // -----------------------------------------for the EV Charger plug image invert filter (shadow DOM) -------------------------------------------
+
+// -----------------------------------------for the clear-icon icon button white color (nested shadow DOM) -------------------------------------------
+  // Document-scope CSS cannot cross shadow DOM boundaries, and the <wz-button>
+  // with a clear-icon button is frequently nested inside OTHER components'
+  // shadow roots.  A plain document.querySelector() returns null for it, so we
+  // must walk every shadow root recursively until we find the host <wz-button>.
+  // The icon's svg path lives in the light DOM as a direct child of the host
+  // wz-button, so once we hold the host we can recolor it directly.
+  //
+  // IMPORTANT: we must NOT permanently mutate the path's fill attribute, or the
+  // white color would stick when the user switches back to light mode while a
+  // POI is still selected.  Instead we remember each path's ORIGINAL fill and
+  // toggle it: white in dark mode, original in light mode.
+  const CLEAR_ICON_FILL = '#ffffff';
+  const _clearIconOrigFills = new WeakMap(); // path -> original fill (string|null)
+
+  // True when this wz-button renders a "clear-icon" icon-only button.
+  // The rendered markup is: <wz-button color="clear-icon"...><button class="wz-button clear-icon sm icon-only">
+  function isClearIconButton(host) {
+    const attr = host.getAttribute && (host.getAttribute('color') || '');
+    if (attr === 'clear-icon') return true;
+    // Fallback: check the shadow root's internal button for the clear-icon class.
+    if (host.shadowRoot) {
+      const btn = host.shadowRoot.querySelector('button.wz-button.icon-only');
+      if (btn && btn.classList.contains('clear-icon')) return true;
+    }
+    return false;
+  }
+
+  // Colors every svg path in the light DOM directly under the host wz-button,
+  // remembering the original 'fill' so it can be restored later.  Pass
+  // targetFill = '#ffffff' (dark) or a falsy value to restore the original.
+  function paintClearIcon(host, targetFill) {
+    host.querySelectorAll('svg path').forEach((p) => {
+      if (!_clearIconOrigFills.has(p)) {
+        // Record the ORIGINAL fill once (attribute may be absent -> null).
+        _clearIconOrigFills.set(p, p.getAttribute('fill'));
+      }
+      if (targetFill) {
+        p.setAttribute('fill', targetFill);
+      } else {
+        // Restore: put the original back if there was one, otherwise remove
+        // the attribute so the icon uses its natural/inherited color again.
+        const original = _clearIconOrigFills.get(p);
+        if (original) {
+          p.setAttribute('fill', original);
+        } else {
+          p.removeAttribute('fill');
+        }
+      }
+    });
+  }
+
+  function applyClearIconColorFix() {
+    // Recolor based on the CURRENT theme instead of bailing out of light mode,
+    // so switching themes while a POI stays selected restores the icon color.
+    const isDark = document.documentElement.getAttribute('wz-theme') === 'dark';
+
+    // Walk the top document AND every nested open shadow root recursively so we
+    // find host wz-buttons that are themselves buried in deeper shadow roots.
+    const seen = new Set();
+    const walkAndPaint = (scope) => {
+      scope.querySelectorAll('wz-button').forEach((host) => {
+        if (seen.has(host)) return;
+        seen.add(host);
+        if (isClearIconButton(host)) paintClearIcon(host, isDark ? CLEAR_ICON_FILL : null);
+      });
+      scope.querySelectorAll('*').forEach((el) => {
+        if (el.shadowRoot && el.shadowRoot.mode === 'open') {
+          walkAndPaint(el.shadowRoot);
+        }
+      });
+    };
+    walkAndPaint(document);
+  }
+
+  // Debounced scheduler so the expensive recursive walk only runs once after a
+  // burst of DOM mutations (dropdowns render their buttons on open).
+  let _clearIconTimer = null;
+  function scheduleClearIconFix() {
+    if (_clearIconTimer) return;
+    _clearIconTimer = setTimeout(() => {
+      _clearIconTimer = null;
+      applyClearIconColorFix();
+    }, 150);
+  }
+
+  // Initial pass after styles/theme are applied (buttons may already exist).
+  setTimeout(applyClearIconColorFix, 500);
+// -----------------------------------------for the clear-icon icon button white color (nested shadow DOM) -------------------------------------------
 
 // -----------------------------------------for the clicksaver road type chip border color override in compact mode -------------------------------------------
   // Override road type chip border color from black to red
