@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.12.3
+// @version      1.12.4
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
 // @match        *://*.waze.com/*editor*
-// @match        *://*.waze.com/chat*
-// @match        *://*.waze.com/discuss*
+// @exclude      *://*.waze.com/chat*
+// @exclude      *://*.waze.com/discuss*
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_addValueChangeListener
@@ -190,6 +190,8 @@ Version
 		- Fixed for Lane Tools delete lane buttons not being visible in dark mode
 1.12.3 - Fixed -
 		- WME/Google Places dropdown icon is now visible in dark mode by querying it for the clear-icon icon button and recoloring it white
+1.12.4 - Fixed -
+		- Fixed for beta WME v2.374-4-g05c331378b layer switcher menu gone rogue in dark mode
 */
 
 /* global W */
@@ -200,7 +202,7 @@ Version
 
 (function main() {
   ('use strict');
-	const updateMessage = '<strong>Fixed :</strong><br> - WME/Google Places dropdown icon is now visible in dark mode (recolored to white) <br>';
+	const updateMessage = '<strong>Fixed :</strong><br> - Fixed for beta WME v2.374-4-g05c331378b layer switcher menu gone rogue in dark mode<br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
 	const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -433,6 +435,12 @@ Version
 				background: var(--background_default);
 			}
 
+			/* 'Map layers' pane */
+			[wz-theme="dark"] [data-testid="layer-switcher-menu"] {
+				background-color: var(--background_default) !important;
+			}
+
+			//for beta version, once the beta goes to prod, below can be removed
 			/* 'Map layers' pane */
 			[wz-theme="dark"] .layer-switcher .menu {
 				background: var(--background_default);
