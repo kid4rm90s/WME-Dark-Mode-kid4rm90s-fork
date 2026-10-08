@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.12.4
+// @version      1.12.5
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
 // @match        *://*.waze.com/*editor*
-// @exclude      *://*.waze.com/chat*
+// @match      *://*.waze.com/chat*
 // @exclude      *://*.waze.com/discuss*
 // @grant        GM_setValue
 // @grant        GM_getValue
