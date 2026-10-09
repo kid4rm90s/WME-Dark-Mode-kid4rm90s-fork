@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.12.5
+// @version      1.12.6
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
 // @match        *://*.waze.com/*editor*
-// @match      *://*.waze.com/chat*
+// @match      	 *://*.waze.com/chat*
 // @exclude      *://*.waze.com/discuss*
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -202,7 +202,7 @@ Version
 
 (function main() {
   ('use strict');
-	const updateMessage = '<strong>Fixed :</strong><br> - Fixed for beta WME v2.374-4-g05c331378b layer switcher menu gone rogue in dark mode<br>';
+	const updateMessage = '<strong>Fixed :</strong><br> - Fixed for beta WME v2.374-4-g05c331378b layer switcher menu gone rogue in dark mode<br> - Fixed issue with production layer switcher menu<br><br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
 	const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -440,7 +440,7 @@ Version
 				background-color: var(--background_default) !important;
 			}
 
-			//for beta version, once the beta goes to prod, below can be removed
+			/*for beta version, once the beta goes to prod, below can be removed*/
 			/* 'Map layers' pane */
 			[wz-theme="dark"] .layer-switcher .menu {
 				background: var(--background_default);
