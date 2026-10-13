@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.12.6
+// @version      1.12.7
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -192,6 +192,12 @@ Version
 		- WME/Google Places dropdown icon is now visible in dark mode by querying it for the clear-icon icon button and recoloring it white
 1.12.4 - Fixed -
 		- Fixed for beta WME v2.374-4-g05c331378b layer switcher menu gone rogue in dark mode
+1.12.5 - Fixed -
+		- Fixed for beta WME v2.374-4-g05c331378b layer switcher menu gone rogue in dark mode (follow-up)
+1.12.6 - Fixed -
+		- Fixed for production layer switcher menu
+1.12.7 - Fixed -
+		- Map layers pane now matches #layer-switcher-region structurally / by class prefix (menu--<hash>) so it works on production (data-testid absent) as well as beta, without depending on the build-specific hash
 */
 
 /* global W */
@@ -202,7 +208,7 @@ Version
 
 (function main() {
   ('use strict');
-	const updateMessage = '<strong>Fixed :</strong><br> - Fixed for beta WME v2.374-4-g05c331378b layer switcher menu gone rogue in dark mode<br> - Fixed issue with production layer switcher menu<br><br>';
+	const updateMessage = '<strong>Fixed :</strong><br> - Fixed for production WME v2.374-5-g0024d1fa65 layer switcher menu gone rogue in dark mode<br> - Fixed issue with production layer switcher menu (data-testid not present in production)<br><br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
 	const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -436,14 +442,11 @@ Version
 			}
 
 			/* 'Map layers' pane */
-			[wz-theme="dark"] [data-testid="layer-switcher-menu"] {
+			/* beta: #layer-switcher-region > div[data-testid="layer-switcher"] > div[data-testid="layer-switcher-menu"] */
+			/* prod: #layer-switcher-region > div > div.menu--<hash> (no data-testid; hash is build-specific) */
+			[wz-theme="dark"] [data-testid="layer-switcher-menu"],
+			[wz-theme="dark"] #layer-switcher-region [class*="menu--"]{
 				background-color: var(--background_default) !important;
-			}
-
-			/*for beta version, once the beta goes to prod, below can be removed*/
-			/* 'Map layers' pane */
-			[wz-theme="dark"] .layer-switcher .menu {
-				background: var(--background_default);
 			}
 
 			[wz-theme="dark"] h1,
