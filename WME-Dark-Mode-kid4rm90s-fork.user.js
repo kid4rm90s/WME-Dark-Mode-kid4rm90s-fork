@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.12.7
+// @version      1.12.8
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -198,6 +198,8 @@ Version
 		- Fixed for production layer switcher menu
 1.12.7 - Fixed -
 		- Map layers pane now matches #layer-switcher-region structurally / by class prefix (menu--<hash>) so it works on production (data-testid absent) as well as beta, without depending on the build-specific hash
+1.12.8 - Fixed -
+		- Fixed for the dark background to WME header elements so the Your Map menu displays correctly in Beta
 */
 
 /* global W */
@@ -208,7 +210,7 @@ Version
 
 (function main() {
   ('use strict');
-	const updateMessage = '<strong>Fixed :</strong><br> - Fixed for production WME v2.374-5-g0024d1fa65 layer switcher menu gone rogue in dark mode<br> - Fixed issue with production layer switcher menu (data-testid not present in production)<br><br>';
+	const updateMessage = '<strong>Fixed :</strong><br> - Fixed for the dark background to WME header elements so the Your Map menu displays correctly in Beta.<br><br><br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
 	const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -1066,6 +1068,10 @@ Version
 
     /* Editor info -------------------------------------- */
 			[wz-theme="dark"] #header {
+				background-color: var(--background_default);
+			}
+
+			[wz-theme="dark"] div[class^="header--"] {
 				background-color: var(--background_default);
 			}
 
