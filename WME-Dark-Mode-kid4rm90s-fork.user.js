@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Dark Mode (kid4rm90s fork)
 // @namespace    https://greasyfork.org/en/users/1434751-poland-fun
-// @version      1.12.8
+// @version      1.12.9
 // @description  Enable dark mode in WME.
 // @author       poland_fun
 // @contributor	 kid4rm90s and luan_tavares_127
@@ -200,6 +200,8 @@ Version
 		- Map layers pane now matches #layer-switcher-region structurally / by class prefix (menu--<hash>) so it works on production (data-testid absent) as well as beta, without depending on the build-specific hash
 1.12.8 - Fixed -
 		- Fixed for the dark background to WME header elements so the Your Map menu displays correctly in Beta
+1.12.9 - Added -
+		- Added support for WME Magic Wand
 */
 
 /* global W */
@@ -210,7 +212,7 @@ Version
 
 (function main() {
   ('use strict');
-	const updateMessage = '<strong>Fixed :</strong><br> - Fixed for the dark background to WME header elements so the Your Map menu displays correctly in Beta.<br><br><br>';
+	const updateMessage = '<strong>Added :</strong><br> - Added support for WME Magic Wand<br><br><br>';
   const scriptName = GM_info.script.name;
   const scriptVersion = GM_info.script.version;
 	const downloadUrl = 'https://greasyfork.org/scripts/529939-wme-dark-mode-kid4rm90s-fork/code/WME%20Dark%20Mode%20%28kid4rm90s%20fork%29.user.js';
@@ -1907,6 +1909,140 @@ Version
 
 /*********** WME EV Chargers plug color *******************************************/
 			/* Applied via JS (CSS injected into wz-autocomplete shadow root) - see scheduleEVChargerFilter() */
+
+/*********** WME Magic Wand ***********************************************/
+			[wz-theme="dark"] {
+				--wmw-surface: var(--background_default) !important;
+				--wmw-bg: var(--always_dark_surface_default) !important;
+				--wmw-border: var(--always_dark_inactive) !important;
+				--wmw-text: var(--content_p1) !important;
+				--wmw-text2: var(--content_p2) !important;
+			}
+
+			/* Map button: the script hardcodes a white circle. */
+			[wz-theme="dark"] #wmw-fab {
+				background: var(--always_dark_surface_default) !important;
+				box-shadow: 0 0 0 1px var(--always_dark_inactive), 0 2px 6px rgba(0, 0, 0, .45) !important;
+			}
+
+			[wz-theme="dark"] #wmw-fab.on {
+				background: #1e3a5f !important;
+				box-shadow: 0 0 0 2px var(--wmw-blue-btn), 0 2px 6px rgba(0, 0, 0, .45) !important;
+			}
+
+			/* The wand is drawn in slate grey: brighten it on the dark circle. */
+			[wz-theme="dark"] #wmw-fab svg {
+				filter: brightness(1.9);
+			}
+
+			/* Headings and accents: the original #1976d2 is unreadable on dark. */
+			[wz-theme="dark"] #wmw-sidebar h2,
+			[wz-theme="dark"] #wmw-sidebar .wmw-sb-sec,
+			[wz-theme="dark"] #wmw-carte .wmw-pv-tete b,
+			[wz-theme="dark"] .wmw-pv-etat-l {
+				color: #64b5f6 !important;
+			}
+
+			[wz-theme="dark"] #wmw-sidebar a,
+			[wz-theme="dark"] .wmw-help-body a {
+				color: #90caf9 !important;
+			}
+
+			/* Dropdowns of the tab and of the preview card. */
+			[wz-theme="dark"] #wmw-sidebar select,
+			[wz-theme="dark"] #wmw-carte select {
+				background: var(--always_dark_surface_default) !important;
+				color: var(--content_p1) !important;
+				border-color: var(--always_dark_inactive) !important;
+			}
+
+			/* Keycaps of the help sections (the ones inside buttons inherit). */
+			[wz-theme="dark"] #wmw-sidebar kbd {
+				background: var(--always_dark_surface_default) !important;
+				color: var(--content_p1) !important;
+				border-color: var(--always_dark_inactive) !important;
+			}
+
+			/* Collapsible help headers. */
+			[wz-theme="dark"] .wmw-help-hdr {
+				color: var(--content_p1) !important;
+			}
+
+			[wz-theme="dark"] .wmw-help-hdr:hover {
+				background: var(--always_dark_inactive) !important;
+			}
+
+			[wz-theme="dark"] .wmw-help-hdr.on {
+				background: #1e3a5f !important;
+				color: #90caf9 !important;
+			}
+
+			/* Secondary buttons (Cancel, Replace outline). */
+			[wz-theme="dark"] .wmw-btn-sec {
+				background: var(--always_dark_inactive) !important;
+				color: var(--content_p1) !important;
+			}
+
+			[wz-theme="dark"] .wmw-btn-sec:hover {
+				background: var(--always_dark_surface_default) !important;
+			}
+
+			/* Warning lines of the preview card and its progress bar. */
+			[wz-theme="dark"] .wmw-pv-alerte {
+				background: #4a3512 !important;
+				color: #ffcc80 !important;
+			}
+
+			[wz-theme="dark"] .wmw-pv-barre {
+				background: var(--always_dark_inactive) !important;
+			}
+
+			/* "New version available" banner. */
+			[wz-theme="dark"] .wmw-sb-maj {
+				background: #4a1f24 !important;
+				color: #ff8a80 !important;
+			}
+
+			[wz-theme="dark"] .wmw-sb-maj a {
+				color: #ff8a80 !important;
+			}
+
+			/* Shared map-button dock (DSX) the script installs: #dsx-plus and
+			   #dsx-panneau, also used by the author's other scripts. */
+			[wz-theme="dark"] #dsx-plus {
+				background: var(--always_dark_surface_default) !important;
+				color: var(--content_p1) !important;
+				box-shadow: 0 2px 6px rgba(0, 0, 0, .45) !important;
+			}
+
+			[wz-theme="dark"] #dsx-plus:hover,
+			[wz-theme="dark"] #dsx-plus[aria-expanded="true"] {
+				background: var(--always_dark_inactive) !important;
+			}
+
+			[wz-theme="dark"] #dsx-plus .dsx-compte {
+				border-color: var(--always_dark_surface_default) !important;
+			}
+
+			[wz-theme="dark"] #dsx-panneau {
+				background: var(--background_default) !important;
+				color: var(--content_p1) !important;
+				border-color: var(--always_dark_inactive) !important;
+			}
+
+			[wz-theme="dark"] #dsx-panneau .dsx-ligne:hover,
+			[wz-theme="dark"] #dsx-panneau .dsx-epingle[aria-pressed="true"],
+			[wz-theme="dark"] #dsx-panneau .dsx-epingle:hover {
+				background: var(--always_dark_inactive) !important;
+			}
+
+			[wz-theme="dark"] #dsx-panneau .dsx-titre {
+				color: #64b5f6;
+			}
+
+			[wz-theme="dark"] #dsx-panneau .dsx-aide {
+				color: var(--content_p2);
+			}
 
 			`;
 
